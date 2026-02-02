@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Importação das Fontes */
+
+@layer base {
+  :root {
+    /* Dark mystical theme variables */
+    --background: 160 20% 4%;
+    --foreground: 45 30% 90%;
+
+    --card: 160 15% 8%;
+    --card-foreground: 45 30% 90%;
+
+    --popover: 160 15% 6%;
+    --popover-foreground: 45 30% 90%;
+
+    /* Emerald serpent green */
+    --primary: 160 60% 25%;
+    --primary-foreground: 45 30% 95%;
+
+    /* Gold accent */
+    --secondary: 38 70% 50%;
+    --secondary-foreground: 160 20% 4%;
+
+    /* Muted dark */
+    --muted: 160 10% 15%;
+    --muted-foreground: 160 10% 55%;
+
+    /* Deep burgundy accent */
+    --accent: 350 50% 35%;
+    --accent-foreground: 45 30% 95%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 45 30% 95%;
+
+    --border: 160 15% 18%;
+    --input: 160 15% 18%;
+    --ring: 38 70% 50%;
+
+    --radius: 0.5rem;
+
+    /* Custom colors */
+    --gold: 38 70% 50%;
+    --gold-light: 38 60% 65%;
+    --gold-dark: 38 80% 35%;
+    --emerald: 160 60% 25%;
+    --emerald-light: 160 50% 35%;
+    --emerald-dark: 160 70% 15%;
+    --burgundy: 350 50% 35%;
+    --obsidian: 160 20% 4%;
+    --smoke: 160 10% 20%;
+
+    --sidebar-background: 160 15% 6%;
+    --sidebar-foreground: 45 30% 90%;
+    --sidebar-primary: 38 70% 50%;
+    --sidebar-primary-foreground: 160 20% 4%;
+    --sidebar-accent: 160 15% 12%;
+    --sidebar-accent-foreground: 45 30% 90%;
+    --sidebar-border: 160 15% 18%;
+    --sidebar-ring: 38 70% 50%;
+  }
+
+  body {
+    /* Combinando o tema com classes utilitárias para garantir a cor de fundo correta */
+    @apply bg-background text-foreground antialiased font-body;
+  }
+  
+  /* Garantindo que títulos usem a fonte Cinzel */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-wide;
+  }
+}
+
+@layer components {
+  /* Gold shimmer effect */
+  .gold-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--gold)) 0%,
+      hsl(var(--gold-light)) 50%,
+      hsl(var(--gold)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Serpent glow effect */
+  .serpent-glow {
+    box-shadow: 0 0 20px hsl(var(--emerald) / 0.4),
+                0 0 40px hsl(var(--emerald) / 0.2),
+                inset 0 0 20px hsl(var(--emerald) / 0.1);
+  }
+
+  /* Mystical border */
+  .border-mystical {
+    border: 1px solid transparent;
+    background: linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+                linear-gradient(135deg, hsl(var(--gold) / 0.5), hsl(var(--emerald) / 0.5)) border-box;
+  }
+
+  /* Scarcity badge */
+  .scarcity-badge {
+    @apply bg-accent text-accent-foreground px-3 py-1 text-xs font-semibold uppercase tracking-wider rounded-sm;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Product card hover */
+  .product-card {
+    @apply transition-all duration-500 ease-out;
+  }
+
+  .product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-gold);
+  }
+
+  /* CTA button styles */
+  .cta-primary {
+    @apply relative overflow-hidden bg-secondary text-secondary-foreground font-display uppercase tracking-widest px-6 py-3 rounded-md;
+    transition: all 0.4s ease;
+  }
+
+  .cta-primary::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent;
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+
+  .cta-primary:hover::before {
+    transform: translateX(100%);
+  }
+
+  .cta-primary:hover {
+    box-shadow: var(--shadow-gold);
+    transform: scale(1.02);
+  }
+
+  /* Serpent underline */
+  .serpent-underline {
+    @apply relative inline-block;
+  }
+
+  .serpent-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-secondary;
+    transition: width 0.4s ease;
+  }
+
+  .serpent-underline:hover::after {
+    @apply w-full;
+  }
+
+  /* Glass effect */
+  .glass-dark {
+    @apply bg-card/80 backdrop-blur-md border border-white/5;
+  }
+}
