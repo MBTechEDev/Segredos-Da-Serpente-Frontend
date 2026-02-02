@@ -6,10 +6,10 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Habilita o Corepack para gerenciar o Yarn Berry
+# Habilita o Corepack para o Yarn Berry
 RUN corepack enable
 
-# Copia os arquivos de configuração e a pasta .yarn (essencial para Yarn 4)
+# Copia arquivos de configuração de dependências
 COPY package.json yarn.lock* .yarnrc.yml* ./
 COPY .yarn ./.yarn
 
@@ -20,21 +20,20 @@ RUN yarn install
 FROM base AS builder
 WORKDIR /app
 
-# Habilita o Corepack novamente nesta camada
 RUN corepack enable
 
+# Copia as dependências instaladas e o cache do yarn
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/.yarn ./.yarn
-COPY --from=deps /app/package.json ./package.json
-COPY --from=deps /app/.yarnrc.yml ./ .yarnrc.yml/
 
-# Copia o restante do código-fonte
+# Copia o restante do código-fonte primeiro
+# Isso evita o conflito de tentar substituir diretórios por arquivos
 COPY . .
 
-# Variáveis de build corrigidas para o formato KEY=VALUE
+# Variáveis de build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN yarn build\\\\\\\\\a
+RUN yarn build
 
 # 4. Runner stage
 FROM base AS runner
@@ -50,11 +49,10 @@ RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 
-# Configuração de cache do Next.js
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# Copia o output do standalone build
+# Standalone mode do Next.js
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
