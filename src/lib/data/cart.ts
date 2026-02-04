@@ -19,38 +19,34 @@ import { getLocale } from "@lib/data/locale-actions"
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
  * @param cartId - optional - The ID of the cart to retrieve.
- * @returns The cart object if found, or null if not found.
+ * @returns
  */
+
+
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
-  fields ??=
-    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+  fields ??= "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
 
-  if (!id) {
-    return null
-  }
+  if (!id) return null
 
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  const next = {
-    ...(await getCacheOptions("carts")),
-  }
+  const headers = { ...(await getAuthHeaders()) }
+  const cartCacheTag = await getCacheTag("carts") // Pega a tag correta (ex: "carts")
 
   return await sdk.client
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
       method: "GET",
-      query: {
-        fields,
-      },
+      query: { fields },
       headers,
-      next,
-      cache: "force-cache",
+      next: {
+        tags: [cartCacheTag], // Vincula esta busca à tag que você invalida no addToCart
+        revalidate: 0 // Garante que não use cache estático infinito
+      },
+      cache: "no-store", // Força o Next.js a buscar dados novos se a tag mudar
     })
-    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+    .then(({ cart }) => cart)
     .catch(() => null)
 }
+
 
 export async function getOrSetCart(countryCode: string) {
   const region = await getRegion(countryCode)

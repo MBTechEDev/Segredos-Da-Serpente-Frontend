@@ -3,9 +3,8 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react"
 import { HttpTypes } from "@medusajs/types"
 import { useParams } from "next/navigation"
-import { toast } from "sonner" // Opcional: Para feedback visual
+import { toast } from "sonner"
 
-// Importamos as Server Actions que tu me mostraste
 import {
     addToCart as addToCartAction,
     deleteLineItem as deleteLineItemAction,
@@ -13,6 +12,11 @@ import {
     retrieveCart,
     applyPromotions
 } from "@lib/data/cart"
+
+interface AddItemInput {
+    variantId: string
+    quantity: number
+}
 
 interface CartContextType {
     cart: HttpTypes.StoreCart | null
@@ -22,7 +26,7 @@ interface CartContextType {
     total: number
     discountTotal: number
     isLoading: boolean
-    addItem: (variantId: string, quantity: number) => Promise<void>
+    addItem: (input: AddItemInput) => Promise<void>
     updateItem: (lineId: string, quantity: number) => Promise<void>
     removeItem: (lineId: string) => Promise<void>
     applyDiscount: (code: string) => Promise<void>
@@ -43,14 +47,12 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     const [cart, setCart] = useState<HttpTypes.StoreCart | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
-    // Pegamos o countryCode da URL (ex: /br/produtos...)
     const params = useParams()
     const countryCode = (params?.countryCode as string) || "br"
+    console.log("CartContext initialized with countryCode:", countryCode)
 
-    // Função para buscar o carrinho atualizado
     const fetchCart = useCallback(async () => {
         try {
-            // retrieveCart lê o cookie automaticamente no server side
             const cartData = await retrieveCart()
             setCart(cartData)
         } catch (error) {
@@ -59,7 +61,6 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [])
 
-    // Inicialização
     useEffect(() => {
         const init = async () => {
             setIsLoading(true)
@@ -69,29 +70,36 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         init()
     }, [fetchCart])
 
-    // --- Ações ---
-
     const refreshCart = async () => {
         setIsLoading(true)
         await fetchCart()
         setIsLoading(false)
     }
 
-    const addItem = async (variantId: string, quantity: number) => {
+    const addItem = async ({ variantId, quantity }: AddItemInput) => {
+        if (!variantId) {
+            toast.error("Erro: Variante não identificada.")
+            return
+        }
+
         setIsLoading(true)
         try {
-            // Chama a Server Action do teu arquivo cart.ts
             await addToCartAction({
                 variantId,
                 quantity,
                 countryCode,
             })
+            console.log("Success adding to cart:", { variantId, quantity, countryCode })
 
-            // Como a server action revalida a tag, buscamos o dado fresco
+            // Força a revalidação da página e busca o carrinho atualizado
             await fetchCart()
-            toast.success("Adicionado ao carrinho")
+
+            // Abre o CartDrawer automaticamente para dar feedback visual
+            // (Isso depende de como você controla o estado de abertura no Nav)
+
+            toast.success("Artefato adicionado ao ritual")
         } catch (error: any) {
-            console.error(error)
+            console.error("Erro no CartContext:", error)
             toast.error(error.message || "Erro ao adicionar item")
         } finally {
             setIsLoading(false)
@@ -101,13 +109,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     const updateItem = async (lineId: string, quantity: number) => {
         setIsLoading(true)
         try {
-            await updateLineItemAction({
-                lineId,
-                quantity,
-            })
+            await updateLineItemAction({ lineId, quantity })
             await fetchCart()
         } catch (error: any) {
-            console.error(error)
             toast.error("Erro ao atualizar quantidade")
         } finally {
             setIsLoading(false)
@@ -119,9 +123,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             await deleteLineItemAction(lineId)
             await fetchCart()
-            toast.success("Item removido")
+            toast.success("Item removido do ritual")
         } catch (error: any) {
-            console.error(error)
             toast.error("Erro ao remover item")
         } finally {
             setIsLoading(false)
@@ -133,25 +136,16 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             await applyPromotions([code])
             await fetchCart()
-            toast.success("Cupom aplicado!")
+            toast.success("Energia de desconto aplicada!")
         } catch (error: any) {
-            console.error(error)
             toast.error("Cupom inválido ou expirado")
         } finally {
             setIsLoading(false)
         }
     }
 
-    // Cálculos derivados
     const items = useMemo(() => cart?.items || [], [cart])
-
-    const totalItems = useMemo(() => {
-        return items.reduce((acc, item) => acc + item.quantity, 0)
-    }, [items])
-
-    const subtotal = cart?.subtotal || 0
-    const discountTotal = cart?.discount_total || 0
-    const total = cart?.total || 0
+    const totalItems = useMemo(() => items.reduce((acc, item) => acc + item.quantity, 0), [items])
 
     return (
         <CartContext.Provider
@@ -159,9 +153,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
                 cart,
                 items,
                 totalItems,
-                subtotal,
-                total,
-                discountTotal,
+                subtotal: cart?.subtotal || 0,
+                total: cart?.total || 0,
+                discountTotal: cart?.discount_total || 0,
                 isLoading,
                 addItem,
                 updateItem,

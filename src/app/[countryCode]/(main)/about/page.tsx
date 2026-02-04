@@ -92,7 +92,7 @@ export default async function AboutPage({ params }: { params: { countryCode: str
                         <div className="relative group max-w-[300px] lg:max-w-none mx-auto lg:mx-0">
                             <div className="absolute -inset-4 border border-secondary/20 rounded-full animate-pulse-slow" />
                             <img
-                                src="https://images.unsplash.com/photo-1567344473783-690847798361?q=80&w=1974&auto=format&fit=crop"
+                                src="/assets/sds-logo.png"
                                 alt="Simbolismo Oculto"
                                 className="w-full aspect-square object-cover rounded-full grayscale hover:grayscale-0 transition-all duration-1000"
                             />
@@ -100,7 +100,7 @@ export default async function AboutPage({ params }: { params: { countryCode: str
                         </div>
 
                         <div className="space-y-8 text-center lg:text-left">
-                            <h2 className="font-display text-3xl md:text-4xl text-gradient-gold">🍎🐍 Maçã & Serpente</h2>
+                            <h2 className="font-display text-3xl md:text-4xl text-gradient-gold">Maçã & Serpente</h2>
                             <div className="space-y-6 text-foreground/80 font-body leading-relaxed text-base md:text-lg">
                                 <p>
                                     <strong className="text-secondary font-display">A Maçã:</strong> Representa o fruto do conhecimento oculto, o portal entre os mundos.

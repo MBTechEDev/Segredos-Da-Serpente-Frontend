@@ -2,6 +2,7 @@
 
 import { sdk } from "@lib/config"
 import { sortProducts } from "@lib/util/sort-products"
+import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
@@ -133,4 +134,32 @@ export const listProductsWithSort = async ({
     nextPage,
     queryParams,
   }
+}
+
+
+export const getProductByHandle = async (handle: string) => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const next = {
+    ...(await getCacheOptions("products")),
+  }
+
+  return sdk.client
+    .fetch<{ products: HttpTypes.StoreProduct[] }>(
+      `/store/products`,
+      {
+        method: "GET",
+        query: {
+          handle,
+          fields: "*variants.calculated_price,+variants.inventory_quantity,+metadata,+tags,*images",
+        },
+        headers,
+        next,
+        cache: "force-cache",
+      }
+    )
+    .then(({ products }) => products[0]) // O Medusa retorna um array, pegamos o primeiro resultado
+    .catch(medusaError)
 }

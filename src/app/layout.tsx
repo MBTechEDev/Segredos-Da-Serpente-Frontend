@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import "styles/globals.css"
 import { CartProvider } from "@lib/context/CartContext"
 import Nav from "@modules/layout/templates/nav"
+import { Toaster } from "sonner"
 // import Footer from "@/modules/layout/templates/footer" // Descomenta quando criarmos o footer
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://localhost:8000"
@@ -21,6 +22,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
               {props.children}
             </div>
           </main>
+          <Toaster position="top-right" richColors />
         </CartProvider>
       </body>
     </html>

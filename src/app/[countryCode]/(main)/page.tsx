@@ -1,46 +1,47 @@
 import { Metadata } from "next"
-
-import FeaturedProducts from "@modules/home/components/featured-products"
+import { notFound } from "next/navigation"
 import Hero from "@modules/home/components/hero"
-import { listCollections } from "@lib/data/collections"
+import Categories from "@modules/home/categories"
+import FeaturedProducts from "@modules/home/components/featured-products"
 import { getRegion } from "@lib/data/regions"
+import { listCollections } from "@lib/data/collections"
 
 export const metadata: Metadata = {
   title: "Segredos da Serpente | Artefatos Místicos & Sabedoria Ancestral",
-  description:
-    "Explore o oculto. Encontre produtos ritualísticos, cristais, ervas e ferramentas mágicas para despertar o poder dentro de você. Onde o Arcano se torna Matéria.",
+  description: "Explore o oculto. Onde o Arcano se torna Matéria.",
   openGraph: {
     title: "Segredos da Serpente | Loja Oficial",
-    description: "Desperte sua essência mística com nossos artefatos exclusivos.",
-    images: ["/og-image.jpg"], // Recomendo criar uma imagem com o logo dourado
+    images: ["/og-image.jpg"],
   },
 }
 
 export default async function Home(props: {
   params: Promise<{ countryCode: string }>
 }) {
-  const params = await props.params
+  const { countryCode } = await props.params
 
-  const { countryCode } = params
 
   const region = await getRegion(countryCode)
-
   const { collections } = await listCollections({
     fields: "id, handle, title",
   })
 
-  if (!collections || !region) {
-    return null
+  if (!region || !collections) {
+    return notFound()
   }
 
   return (
-    <>
+    <main className="relative min-h-screen bg-background">
       <Hero />
-      <div className="py-12">
-        <ul className="flex flex-col gap-x-6">
-          <FeaturedProducts collections={collections} region={region} />
+      <Categories />
+      <div className="py-12 md:py-16">
+        <ul className="flex flex-col gap-y-24">
+          <FeaturedProducts
+            collections={collections}
+            region={region}
+          />
         </ul>
       </div>
-    </>
+    </main>
   )
 }

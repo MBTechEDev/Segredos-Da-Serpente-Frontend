@@ -17,6 +17,8 @@ export default function medusaError(error: any): never {
     throw new Error("No response received: " + error.request)
   } else {
     // Something happened in setting up the request that triggered an Error
+    console.error("Medusa API Error (No Response):", error)
+    if (error.cause) console.error("Error Cause:", error.cause)
     throw new Error("Error setting up the request: " + error.message)
   }
 }
