@@ -24,8 +24,6 @@ export async function listPublicPromotions() {
             }
         )
         .then(({ promotions }) => {
-            // Log de Depuração no Terminal do VSCode
-            console.log(`MEDUSA PROMO CHECK: Encontradas ${promotions?.length || 0} promoções.`);
             return promotions;
         })
         .catch((err) => {

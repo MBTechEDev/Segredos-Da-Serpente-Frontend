@@ -49,7 +49,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     const params = useParams()
     const countryCode = (params?.countryCode as string) || "br"
-    console.log("CartContext initialized with countryCode:", countryCode)
+
 
     const fetchCart = useCallback(async () => {
         try {
@@ -89,7 +89,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
                 quantity,
                 countryCode,
             })
-            console.log("Success adding to cart:", { variantId, quantity, countryCode })
+
 
             // Força a revalidação da página e busca o carrinho atualizado
             await fetchCart()

@@ -160,8 +160,9 @@ const Shipping: React.FC<ShippingProps> = ({
               onClick={handleSubmit}
               isLoading={isLoading}
               disabled={!hasSelectedMethod}
+              variant="secondary"
             >
-              Continuar para Pagamento
+              Continuar
             </Button>
           </div>
         </div>

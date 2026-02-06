@@ -6,7 +6,7 @@ import Input from "@modules/common/components/input"
 
 import AccountInfo from "../account-info"
 import { HttpTypes } from "@medusajs/types"
-// import { updateCustomer } from "@lib/data/customer"
+
 
 type MyInformationProps = {
   customer: HttpTypes.StoreCustomer
@@ -25,7 +25,7 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
     }
 
     try {
-      // await updateCustomer(customer)
+
       return { success: true, error: null }
     } catch (error: any) {
       return { success: false, error: error.toString() }

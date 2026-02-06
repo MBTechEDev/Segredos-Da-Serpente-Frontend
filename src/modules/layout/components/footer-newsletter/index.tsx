@@ -8,7 +8,7 @@ export default function FooterNewsletter() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        console.log("Inscrito:", email)
+
     }
 
     return (
