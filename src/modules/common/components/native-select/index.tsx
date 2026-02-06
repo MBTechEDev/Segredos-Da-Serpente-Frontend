@@ -1,5 +1,6 @@
+"use client"
+
 import { ChevronUpDown } from "@medusajs/icons"
-import { clx } from "@medusajs/ui"
 import {
   SelectHTMLAttributes,
   forwardRef,
@@ -8,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { cn } from "@lib/utils"
 
 export type NativeSelectProps = {
   placeholder?: string
@@ -17,7 +19,7 @@ export type NativeSelectProps = {
 
 const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
   (
-    { placeholder = "Select...", defaultValue, className, children, ...props },
+    { placeholder = "Selecionar...", defaultValue, className, children, disabled, ...props },
     ref
   ) => {
     const innerRef = useRef<HTMLSelectElement>(null)
@@ -37,31 +39,58 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
     }, [innerRef.current?.value])
 
     return (
-      <div>
+      <div className="w-full group">
         <div
-          onFocus={() => innerRef.current?.focus()}
-          onBlur={() => innerRef.current?.blur()}
-          className={clx(
-            "relative flex items-center text-base-regular border border-ui-border-base bg-ui-bg-subtle rounded-md hover:bg-ui-bg-field-hover",
-            className,
-            {
-              "text-ui-fg-muted": isPlaceholder,
-            }
+          className={cn(
+            // Altura H-14 exata para alinhar com os Inputs do tema
+            // bg-background garante que o container seja escuro
+            "relative flex items-center h-14 w-full bg-background border rounded-md transition-all duration-200",
+            "border-border focus-within:ring-1 focus-within:ring-secondary/50 focus-within:border-secondary",
+            "hover:bg-neutral-900", // Leve destaque no hover mantendo o dark
+            disabled && "bg-ui-bg-base border-border/50 opacity-70 cursor-not-allowed",
+            className
           )}
         >
           <select
             ref={innerRef}
             defaultValue={defaultValue}
+            disabled={disabled}
             {...props}
-            className="appearance-none flex-1 bg-transparent border-none px-4 py-2.5 transition-colors duration-150 outline-none "
+            className={cn(
+              // appearance-none remove o estilo nativo do SO
+              // text-ui-fg-base puxa a cor clara do tema Medusa UI
+              "appearance-none flex-1 bg-transparent border-none px-4 h-full w-full outline-none text-sm transition-colors cursor-pointer z-10",
+              "text-white", // Garantindo contraste no tema Dark
+              disabled && "cursor-not-allowed",
+              isPlaceholder ? "text-muted-foreground" : "text-foreground"
+            )}
           >
-            <option disabled value="">
+            <option value="" disabled className="bg-background text-foreground">
               {placeholder}
             </option>
-            {children}
+            {/* Injetamos as classes de fundo escuro diretamente nos filhos 
+                para mitigar o comportamento do navegador em componentes nativos.
+            */}
+            {Array.isArray(children)
+              ? children.map((child: any) => {
+                if (child.type === 'option') {
+                  return {
+                    ...child,
+                    props: {
+                      ...child.props,
+                      className: cn("bg-background text-foreground", child.props.className)
+                    }
+                  }
+                }
+                return child
+              })
+              : children
+            }
           </select>
-          <span className="absolute right-4 inset-y-0 flex items-center pointer-events-none ">
-            <ChevronUpDown />
+
+          {/* Ícone posicionado com respiro lateral */}
+          <span className="absolute right-4 flex items-center pointer-events-none text-muted-foreground z-0">
+            <ChevronUpDown fontSize={16} />
           </span>
         </div>
       </div>

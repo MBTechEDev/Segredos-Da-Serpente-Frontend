@@ -1,143 +1,105 @@
+// src/modules/cart/components/item/index.tsx
 "use client"
 
-import { Table, Text, clx } from "@medusajs/ui"
-import { updateLineItem } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
-import CartItemSelect from "@modules/cart/components/cart-item-select"
-import ErrorMessage from "@modules/checkout/components/error-message"
-import DeleteButton from "@modules/common/components/delete-button"
-import LineItemOptions from "@modules/common/components/line-item-options"
-import LineItemPrice from "@modules/common/components/line-item-price"
-import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import Spinner from "@modules/common/icons/spinner"
-import Thumbnail from "@modules/products/components/thumbnail"
-import { useState } from "react"
+import { Trash2, Plus, Minus } from "lucide-react"
+import { useCartContext } from "@lib/context/CartContext"
+import { convertToLocale } from "@lib/util/money"
+import { clx } from "@medusajs/ui"
 
 type ItemProps = {
   item: HttpTypes.StoreCartLineItem
+  currencyCode?: string
   type?: "full" | "preview"
-  currencyCode: string
 }
 
-const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
-  const [updating, setUpdating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+const Item = ({ item, currencyCode, type = "full" }: ItemProps) => {
+  const { updateItem, removeItem } = useCartContext()
 
-  const changeQuantity = async (quantity: number) => {
-    setError(null)
-    setUpdating(true)
-
-    await updateLineItem({
-      lineId: item.id,
-      quantity,
-    })
-      .catch((err) => {
-        setError(err.message)
-      })
-      .finally(() => {
-        setUpdating(false)
-      })
+  const handleUpdateQuantity = (newQuantity: number) => {
+    if (newQuantity > 0) {
+      updateItem(item.id, newQuantity)
+    }
   }
 
-  // TODO: Update this to grab the actual max inventory
-  const maxQtyFromInventory = 10
-  const maxQuantity = item.variant?.manage_inventory ? 10 : maxQtyFromInventory
+  const thumbnail = item.thumbnail || "/placeholder.svg"
 
   return (
-    <Table.Row className="w-full" data-testid="product-row">
-      <Table.Cell className="!pl-0 p-4 w-24">
-        <LocalizedClientLink
-          href={`/products/${item.product_handle}`}
-          className={clx("flex", {
-            "w-16": type === "preview",
-            "small:w-24 w-12": type === "full",
-          })}
-        >
-          <Thumbnail
-            thumbnail={item.thumbnail}
-            images={item.variant?.product?.images}
-            size="square"
-          />
-        </LocalizedClientLink>
-      </Table.Cell>
+    <div className={clx(
+      "bg-white/5 border border-white/10 rounded-lg p-4 flex gap-4 transition-all hover:border-primary/30 group",
+      { "py-2 px-3 gap-2": type === "preview" }
+    )}>
+      <div className={clx(
+        "flex-shrink-0 rounded-md overflow-hidden bg-black/40 border border-white/5",
+        type === "preview" ? "w-12 h-12" : "w-20 h-20 md:w-24 md:h-24"
+      )}>
+        <img
+          src={thumbnail}
+          alt={item.title || "Item místico"}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        />
+      </div>
 
-      <Table.Cell className="text-left">
-        <Text
-          className="txt-medium-plus text-ui-fg-base"
-          data-testid="product-title"
-        >
-          {item.product_title}
-        </Text>
-        <LineItemOptions variant={item.variant} data-testid="product-variant" />
-      </Table.Cell>
-
-      {type === "full" && (
-        <Table.Cell>
-          <div className="flex gap-2 items-center w-28">
-            <DeleteButton id={item.id} data-testid="product-delete-button" />
-            <CartItemSelect
-              value={item.quantity}
-              onChange={(value) => changeQuantity(parseInt(value.target.value))}
-              className="w-14 h-10 p-4"
-              data-testid="product-select-button"
-            >
-              {/* TODO: Update this with the v2 way of managing inventory */}
-              {Array.from(
-                {
-                  length: Math.min(maxQuantity, 10),
-                },
-                (_, i) => (
-                  <option value={i + 1} key={i}>
-                    {i + 1}
-                  </option>
-                )
-              )}
-
-              <option value={1} key={1}>
-                1
-              </option>
-            </CartItemSelect>
-            {updating && <Spinner />}
+      <div className="flex-1 flex flex-col justify-between min-w-0">
+        <div className="flex justify-between items-start gap-2">
+          <div>
+            <h3 className={clx(
+              "font-display text-foreground leading-tight truncate",
+              type === "preview" ? "text-sm" : "text-lg"
+            )}>
+              {item.title}
+            </h3>
+            {item.variant?.title !== "Default" && (
+              <p className="text-[10px] md:text-xs text-muted-foreground font-body mt-1">
+                Essência: <span className="text-secondary/80">{item.variant?.title}</span>
+              </p>
+            )}
           </div>
-          <ErrorMessage error={error} data-testid="product-error-message" />
-        </Table.Cell>
-      )}
 
-      {type === "full" && (
-        <Table.Cell className="hidden small:table-cell">
-          <LineItemUnitPrice
-            item={item}
-            style="tight"
-            currencyCode={currencyCode}
-          />
-        </Table.Cell>
-      )}
-
-      <Table.Cell className="!pr-0">
-        <span
-          className={clx("!pr-0", {
-            "flex flex-col items-end h-full justify-center": type === "preview",
-          })}
-        >
-          {type === "preview" && (
-            <span className="flex gap-x-1 ">
-              <Text className="text-ui-fg-muted">{item.quantity}x </Text>
-              <LineItemUnitPrice
-                item={item}
-                style="tight"
-                currencyCode={currencyCode}
-              />
-            </span>
+          {type === "full" && (
+            <button
+              onClick={() => removeItem(item.id)}
+              className="text-muted-foreground hover:text-destructive transition-colors p-1"
+            >
+              <Trash2 size={16} />
+            </button>
           )}
-          <LineItemPrice
-            item={item}
-            style="tight"
-            currencyCode={currencyCode}
-          />
-        </span>
-      </Table.Cell>
-    </Table.Row>
+        </div>
+
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-x-3 bg-black/40 rounded-full border border-white/5 p-1">
+            <button
+              onClick={() => handleUpdateQuantity(item.quantity - 1)}
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 text-muted-foreground transition-colors disabled:opacity-30"
+              disabled={item.quantity <= 1}
+            >
+              <Minus size={14} />
+            </button>
+            <span className="text-sm font-medium min-w-[20px] text-center font-body">
+              {item.quantity}
+            </span>
+            <button
+              onClick={() => handleUpdateQuantity(item.quantity + 1)}
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 text-primary transition-colors"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+
+          <div className="text-right">
+            <p className="font-display text-lg bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] bg-clip-text text-transparent font-bold">
+              {/* Solução para o erro de tipo: Garantindo que passamos um objeto que a lib money aceite ou forçando o valor */}
+              {convertToLocale({ amount: item.total ?? 0, currency_code: currencyCode ?? 'br' })}
+            </p>
+            {item.quantity > 1 && type === "full" && (
+              <p className="text-[10px] text-muted-foreground font-body uppercase tracking-tighter">
+                {convertToLocale({ amount: item.unit_price ?? 0, currency_code: currencyCode ?? 'br' })} cada
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 

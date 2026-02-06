@@ -1,38 +1,66 @@
-import { listCartShippingMethods } from "@lib/data/fulfillment"
-import { listCartPaymentMethods } from "@lib/data/payment"
+// src/modules/checkout/templates/checkout-form/index.tsx
+"use client"
+
 import { HttpTypes } from "@medusajs/types"
+import { useSearchParams } from "next/navigation"
+import { cn } from "@lib/utils"
+
 import Addresses from "@modules/checkout/components/addresses"
+import Shipping from "@modules/checkout/components/shipping"
 import Payment from "@modules/checkout/components/payment"
 import Review from "@modules/checkout/components/review"
-import Shipping from "@modules/checkout/components/shipping"
+import CheckoutProgress from "../../components/checkout-progress"
+import CheckoutSummary from "../checkout-summary"
 
-export default async function CheckoutForm({
+export default function CheckoutForm({
   cart,
   customer,
 }: {
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
 }) {
-  if (!cart) {
-    return null
-  }
+  const searchParams = useSearchParams()
+  const step = searchParams.get("step") || "address"
 
-  const shippingMethods = await listCartShippingMethods(cart.id)
-  const paymentMethods = await listCartPaymentMethods(cart.region?.id ?? "")
+  if (!cart) return null
 
-  if (!shippingMethods || !paymentMethods) {
-    return null
+  const stepNumber =
+    step === "address" ? 1 :
+      step === "delivery" ? 2 :
+        step === "payment" ? 3 : 4
+
+  const renderCurrentStep = () => {
+    switch (step) {
+      case "address":
+        return <Addresses cart={cart} customer={customer} />
+      case "delivery":
+        return <Shipping cart={cart} availableShippingMethods={cart.shipping_methods as any} />
+      case "payment":
+        return <Payment cart={cart} availablePaymentMethods={cart.payment_collection?.payment_sessions as any} />
+      case "review":
+        return <Review cart={cart} />
+      default:
+        return <Addresses cart={cart} customer={customer} />
+    }
   }
 
   return (
-    <div className="w-full grid grid-cols-1 gap-y-8">
-      <Addresses cart={cart} customer={customer} />
+    // Reduzido padding lateral (px-12), removido padding inferior e margens
+    <div className="w-full lg:px-12 animate-in fade-in duration-700">
 
-      <Shipping cart={cart} availableShippingMethods={shippingMethods} />
+      {/* Reduzido padding vertical do stepper e margem inferior (mb-4) */}
+      <div className="py-4 flex justify-center border-b border-white/5 mb-4">
+        <div className="w-full max-w-xl">
+          <CheckoutProgress activeStep={stepNumber} />
+        </div>
+      </div>
 
-      <Payment cart={cart} availablePaymentMethods={paymentMethods} />
+      {/* Reduzido gap entre formulário e resumo (gap-x-6) e removido paddings internos */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-x-6 gap-y-0 items-start px-[15%]">
+        {renderCurrentStep()}
+        <CheckoutSummary cart={cart} />
+      </div>
 
-      <Review cart={cart} />
     </div>
   )
 }

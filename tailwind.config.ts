@@ -27,7 +27,7 @@ const config: Config = {
       fontFamily: {
         sans: ["Inter", "sans-serif"], // Substitui a padrão do Medusa pela tua
         display: ["Cinzel", "serif"],
-        mystical: ["Cormorant Garamond", "serif"],
+        mystical: ["Cinzel", "serif"],
         body: ["Inter", "sans-serif"],
       },
       // Tuas Cores Personalizadas (Adicionadas ao lado das do Medusa)

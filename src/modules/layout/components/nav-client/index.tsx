@@ -36,8 +36,8 @@ const NavClient = ({ regions, categories }: NavClientProps) => {
     return (
         <header
             className={`sticky top-0 left-0 right-0 z-50 border-b transition-all duration-300 ${isScrolled
-                    ? "bg-background/95 backdrop-blur-md border-border shadow-md"
-                    : "bg-transparent border-transparent"
+                ? "bg-background/95 backdrop-blur-md border-border shadow-md"
+                : "bg-transparent border-transparent"
                 }`}
         >
             <nav className="mx-auto max-w-[1440px] px-4 sm:px-6">
@@ -61,7 +61,7 @@ const NavClient = ({ regions, categories }: NavClientProps) => {
 
                     {/* 2. Logo */}
                     <LocalizedClientLink href="/" className="flex items-center gap-2 group outline-none">
-                        <div className="relative flex items-baseline select-none">
+                        <div className="relative flex items-baseline select-none italic">
                             <span className="font-display text-2xl md:text-3xl font-bold tracking-wider bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] bg-clip-text text-transparent drop-shadow-sm">
                                 Segredos
                             </span>
