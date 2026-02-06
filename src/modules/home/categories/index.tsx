@@ -1,5 +1,5 @@
 import { listCategories } from "@lib/data/categories"
-import CategoriesCarousel from "./categories-carousel"
+import CategoriesCarousel from "@components/ui/categories-carousel"
 
 export default async function Categories() {
     const allCategories = await listCategories()

@@ -1,46 +1,52 @@
-import { listProducts } from "@lib/data/products"
+import { Metadata } from "next"
 import { listCategories } from "@lib/data/categories"
-import { getRegion } from "@lib/data/regions" // Importamos a função de mapeamento
+import { listProducts } from "@lib/data/products"
+import { getRegion } from "@lib/data/regions"
 import StoreTemplate from "@modules/store/templates"
-import { notFound } from "next/navigation"
+import { HttpTypes } from "@medusajs/types"
 
-export default async function StorePage({
-  params,
-  searchParams,
-}: {
+export const metadata: Metadata = {
+  title: "Loja | Segredos da Serpente",
+  description: "Explore nossa coleção mística de cristais e amuletos.",
+}
+
+type Props = {
   params: Promise<{ countryCode: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}) {
+}
+
+export default async function StorePage({ params, searchParams }: Props) {
   const { countryCode } = await params
   const sParams = await searchParams
 
-  // 1. Utilizamos sua função getRegion para converter "br" no objeto Region real
   const region = await getRegion(countryCode)
 
-  // 2. Se o país na URL não estiver mapeado em nenhuma região no Medusa Admin
-  if (!region) {
-    return notFound()
-  }
+  // No Medusa v2, listCategories costuma retornar o array diretamente ou 
+  // um objeto com a propriedade product_categories.
+  const categories = await listCategories()
 
-  // 3. Buscamos produtos e categorias em paralelo
-  // Passamos region.id (o ID real reg_...) para o Medusa buscar os preços corretos
-  const [productsData, categories] = await Promise.all([
-    listProducts({
-      countryCode,
-      queryParams: {
-        limit: 12,
-        ...sParams,
-        region_id: region.id
-      }
-    }),
-    listCategories()
-  ])
+  // Regra de Ouro: Filtrar categorias raiz com tipagem estrita do Medusa
+  const rootCategories = categories.filter(
+    (c: HttpTypes.StoreProductCategory) => !c.parent_category_id
+  )
+
+  // Busca de produtos via SDK
+  const { response } = await listProducts({
+    countryCode,
+    queryParams: {
+      limit: 12,
+      offset: 0,
+      // Aqui poderíamos passar filtros vindos de sParams
+    }
+  })
+
+  if (!region) return null
 
   return (
     <StoreTemplate
-      products={productsData.response.products}
-      count={productsData.response.count}
-      categories={categories}
+      products={response.products}
+      count={response.count}
+      categories={rootCategories}
       region={region}
     />
   )

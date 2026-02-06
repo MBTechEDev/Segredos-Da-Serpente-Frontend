@@ -37,7 +37,7 @@ const MobileMenu = ({ categories }: MobileMenuProps) => {
             {/* Header */}
             <div className="p-6 border-b border-border">
                 <LocalizedClientLink href="/" className="flex items-baseline">
-                    <span className="font-display text-xl text-gradient-gold tracking-wider">
+                    <span className="font-display text-xl text-gradient-gold tracking-wider bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] bg-clip-text text-transparent drop-shadow-sm">
                         Segredos
                     </span>
                     <span className="font-mystical text-lg text-foreground/80 italic ml-1">

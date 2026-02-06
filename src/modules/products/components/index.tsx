@@ -26,16 +26,12 @@ export default function ProductTemplate({
     const [selectedVariantId, setSelectedVariantId] = useState(product.variants?.[0]?.id)
     const [viewingNow, setViewingNow] = useState(12)
 
-    // Variantes e Preços Reais
     const selectedVariant = product.variants?.find(v => v.id === selectedVariantId) || product.variants?.[0]
 
-    // Medusa v2: O preço calculado já vem formatado ou em centavos dependendo da sua lib
     const price = selectedVariant?.calculated_price?.calculated_amount || 0
     const originalPrice = selectedVariant?.calculated_price?.original_amount
     const hasDiscount = originalPrice && originalPrice > price
 
-    // Correção do Erro ts(2554): Ajustando para o formato de objeto esperado pela maioria das implementações Medusa
-    // E garantindo um fallback para o currency_code (Regra de Ouro 4)
     const formattedPrice = convertToLocale({
         amount: price,
         currency_code: region.currency_code || "brl"
@@ -46,7 +42,6 @@ export default function ProductTemplate({
         currency_code: region.currency_code || "brl"
     }) : null
 
-    // Simulação de Escassez Mística
     useEffect(() => {
         const interval = setInterval(() => {
             setViewingNow(prev => Math.max(5, Math.min(30, prev + (Math.random() > 0.5 ? 1 : -1))))
@@ -56,15 +51,13 @@ export default function ProductTemplate({
 
     const handleAddToCart = async () => {
         if (selectedVariantId) {
-            if (selectedVariantId) {
-                await addItem({ variantId: selectedVariantId, quantity })
-            }
+            await addItem({ variantId: selectedVariantId, quantity })
         }
     }
 
     return (
         <div className="min-h-screen bg-background pb-20">
-            <main className="container mx-auto px-4 pt-32">
+            <main className="container mx-auto px-4 pt-8">
                 <div className="grid lg:grid-cols-2 gap-12">
 
                     {/* Coluna Esquerda: Galeria Glassmorphism */}
@@ -90,17 +83,17 @@ export default function ProductTemplate({
                             </div>
                         </div>
 
-                        <div className="flex gap-4 overflow-x-auto pb-2">
+                        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                             {product.images?.map((img, i) => (
                                 <button
                                     key={img.id}
                                     onClick={() => setSelectedImage(i)}
                                     className={cn(
-                                        "w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
+                                        "w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all",
                                         selectedImage === i ? "border-secondary" : "border-transparent opacity-50 hover:opacity-100"
                                     )}
                                 >
-                                    <img src={img.url ?? ""} className="w-full h-full object-cover" />
+                                    <img src={img.url ?? ""} className="w-full h-full object-cover" alt="Miniatura" />
                                 </button>
                             ))}
                         </div>
@@ -112,13 +105,13 @@ export default function ProductTemplate({
                             <span className="text-secondary font-display tracking-widest text-sm uppercase">
                                 {product.collection?.title || "Coleção Exclusiva"}
                             </span>
-                            <h1 className="text-4xl lg:text-5xl font-display text-gradient-gold">
+                            <h1 className="text-3xl lg:text-5xl font-display text-gradient-gold leading-tight">
                                 {product.title}
                             </h1>
                         </div>
 
                         {/* Social Proof Section */}
-                        <div className="flex flex-wrap gap-6 py-4 border-y border-white/10">
+                        <div className="flex flex-wrap gap-4 lg:gap-6 py-4 border-y border-white/10">
                             <div className="flex items-center gap-2 text-sm text-accent">
                                 <Eye className="w-4 h-4 animate-pulse" />
                                 <span>{viewingNow} buscando equilíbrio agora</span>
@@ -129,10 +122,10 @@ export default function ProductTemplate({
                             </div>
                         </div>
 
-                        {/* Preços Reais Medusa */}
+                        {/* Preços */}
                         <div className="space-y-1">
                             <div className="flex items-baseline gap-4">
-                                <span className="text-4xl font-semibold text-foreground">
+                                <span className="text-3xl lg:text-4xl font-semibold text-foreground">
                                     {formattedPrice}
                                 </span>
                                 {hasDiscount && (
@@ -146,7 +139,7 @@ export default function ProductTemplate({
                             </p>
                         </div>
 
-                        {/* Seletor de Opções Medusa */}
+                        {/* Opções (Variantes) */}
                         {product.options?.map((option) => (
                             <div key={option.id} className="space-y-3">
                                 <label className="text-sm font-display uppercase tracking-wider text-secondary">
@@ -157,7 +150,7 @@ export default function ProductTemplate({
                                         <button
                                             key={val.id}
                                             className={cn(
-                                                "px-6 py-2 rounded-full border text-sm transition-all",
+                                                "px-4 lg:px-6 py-2 rounded-full border text-xs lg:text-sm transition-all",
                                                 selectedVariant?.options?.some(o => o.value === val.value)
                                                     ? "border-secondary bg-secondary/10 text-secondary"
                                                     : "border-white/10 hover:border-secondary/50"
@@ -174,52 +167,63 @@ export default function ProductTemplate({
                             </div>
                         ))}
 
-                        {/* Ações de Compra */}
-                        <div className="flex flex-col gap-4 pt-6">
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center border border-white/10 rounded-lg glass-dark">
-                                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 hover:text-secondary"><Minus size={16} /></button>
-                                    <span className="w-8 text-center font-display">{quantity}</span>
-                                    <button onClick={() => setQuantity(quantity + 1)} className="p-3 hover:text-secondary"><Plus size={16} /></button>
-                                </div>
-                                <Button
-                                    onClick={handleAddToCart}
-                                    className="flex-1 h-14 cta-primary text-lg font-display tracking-widest"
+                        {/* Ações de Compra Corrigidas */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-6">
+                            {/* Seletor de Quantidade */}
+                            <div className="flex items-center justify-between sm:justify-start border border-white/10 rounded-lg glass-dark h-12 lg:h-14">
+                                <button
+                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                    className="px-4 h-full hover:text-secondary transition-colors"
                                 >
-                                    <ShoppingBag className="mr-2" /> REIVINDICAR AGORA
-                                </Button>
+                                    <Minus size={16} />
+                                </button>
+                                <span className="w-10 text-center font-display text-lg">{quantity}</span>
+                                <button
+                                    onClick={() => setQuantity(quantity + 1)}
+                                    className="px-4 h-full hover:text-secondary transition-colors"
+                                >
+                                    <Plus size={16} />
+                                </button>
                             </div>
+
+                            {/* Botão de Checkout */}
+                            <Button
+                                onClick={handleAddToCart}
+                                className="flex-1 h-12 lg:h-14 cta-primary text-base lg:text-lg font-display tracking-widest"
+                            >
+                                <ShoppingBag className="mr-2 w-5 h-5" /> REIVINDICAR AGORA
+                            </Button>
                         </div>
 
-                        {/* Selos de Confiança Místicos */}
+                        {/* Selos */}
                         <div className="grid grid-cols-3 gap-4 pt-8 border-t border-white/10">
-                            <div className="text-center space-y-2">
-                                <Truck className="mx-auto text-secondary" />
-                                <p className="text-[10px] uppercase tracking-tighter text-muted-foreground">Entrega Astral</p>
-                            </div>
-                            <div className="text-center space-y-2">
-                                <Shield className="mx-auto text-secondary" />
-                                <p className="text-[10px] uppercase tracking-tighter text-muted-foreground">Portal Seguro</p>
-                            </div>
-                            <div className="text-center space-y-2">
-                                <RotateCcw className="mx-auto text-secondary" />
-                                <p className="text-[10px] uppercase tracking-tighter text-muted-foreground">Troca Serena</p>
-                            </div>
+                            {[
+                                { icon: Truck, label: "Entrega Astral" },
+                                { icon: Shield, label: "Portal Seguro" },
+                                { icon: RotateCcw, label: "Troca Serena" }
+                            ].map((seal, idx) => (
+                                <div key={idx} className="text-center space-y-2">
+                                    <seal.icon className="mx-auto text-secondary w-5 h-5" />
+                                    <p className="text-[9px] lg:text-[10px] uppercase tracking-tighter text-muted-foreground leading-tight">
+                                        {seal.label}
+                                    </p>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
 
-                {/* Abas de Conhecimento Sagrado */}
+                {/* Abas */}
                 <div className="mt-20">
                     <Tabs defaultValue="desc" className="w-full">
-                        <TabsList className="bg-transparent border-b border-white/10 w-full justify-start rounded-none h-auto p-0">
-                            <TabsTrigger value="desc" className="data-[state=active]:border-secondary border-b-2 border-transparent rounded-none pb-4 font-display uppercase tracking-widest bg-transparent">O Cristal</TabsTrigger>
-                            <TabsTrigger value="ritual" className="data-[state=active]:border-secondary border-b-2 border-transparent rounded-none pb-4 font-display uppercase tracking-widest bg-transparent">O Ritual</TabsTrigger>
+                        <TabsList className="bg-transparent border-b border-white/10 w-full justify-start rounded-none h-auto p-0 gap-8">
+                            <TabsTrigger value="desc" className="data-[state=active]:border-secondary border-b-2 border-transparent rounded-none pb-4 font-display uppercase tracking-widest bg-transparent text-sm lg:text-base">O Cristal</TabsTrigger>
+                            <TabsTrigger value="ritual" className="data-[state=active]:border-secondary border-b-2 border-transparent rounded-none pb-4 font-display uppercase tracking-widest bg-transparent text-sm lg:text-base">O Ritual</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="desc" className="py-8 font-mystical text-lg text-muted-foreground leading-relaxed">
+                        <TabsContent value="desc" className="py-8 font-mystical text-base lg:text-lg text-muted-foreground leading-relaxed">
                             {product.description}
                         </TabsContent>
-                        <TabsContent value="ritual" className="py-8 font-mystical text-lg text-muted-foreground leading-relaxed italic">
+                        <TabsContent value="ritual" className="py-8 font-mystical text-base lg:text-lg text-muted-foreground leading-relaxed italic">
                             Este item foi purificado sob a luz da lua cheia e aguarda sua intenção para manifestar seu pleno poder.
                         </TabsContent>
                     </Tabs>
