@@ -1,69 +1,60 @@
 "use client"
 
-import React, { useEffect, useActionState } from "react"
-import Input from "@modules/common/components/input"
-import AccountInfo from "../account-info"
-import { HttpTypes } from "@medusajs/types"
-import { toast } from "@medusajs/ui"
+import React, { useState } from "react"
+import { Button } from "@components/ui/button"
+import { toast } from "sonner"
+import { Loader2, Send } from "lucide-react"
+// Importamos a função de reset (ajuste o caminho conforme sua lib)
+// Se não tiver, podemos usar o fetch direto para o endpoint de auth
+import { sdk } from "@lib/config"
 
-type MyInformationProps = {
-  customer: HttpTypes.StoreCustomer
-}
+const ProfilePassword = ({ email }: { email?: string }) => {
+  const [isSending, setIsSending] = useState(false)
 
-const ProfilePassword: React.FC<MyInformationProps> = ({ customer }) => {
-  const [successState, setSuccessState] = React.useState(false)
+  const handleResetRequest = async () => {
+    if (!email) return
 
-  // TODO: Add support for password updates
-  const updatePassword = async () => {
-    toast.info("Password update is not implemented")
-  }
+    setIsSending(true)
+    try {
+      // No Medusa v2, solicitamos o reset via auth provider
+      await sdk.client.fetch(`/store/auth/emailpass/reset-password/token`, {
+        method: "POST",
+        body: { email }
+      })
 
-  const clearState = () => {
-    setSuccessState(false)
+      toast.success("Um corvo foi enviado ao seu e-mail com as instruções para a nova chave!")
+    } catch (error) {
+      // Mesmo se falhar, por segurança, avisamos que se o e-mail existir, receberá o link
+      toast.info("Se o seu e-mail estiver em nossos registros, você receberá um link de redefinição.")
+    } finally {
+      setIsSending(false)
+    }
   }
 
   return (
-    <form
-      action={updatePassword}
-      onReset={() => clearState()}
-      className="w-full"
-    >
-      <AccountInfo
-        label="Password"
-        currentInfo={
-          <span>The password is not shown for security reasons</span>
-        }
-        isSuccess={successState}
-        isError={false}
-        errorMessage={undefined}
-        clearState={clearState}
-        data-testid="account-password-editor"
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border border-gold/10 rounded-xl bg-background/40">
+      <div>
+        <p className="font-body text-emerald-50 font-medium">Chave de Acesso (Senha)</p>
+        <p className="text-sm text-emerald-100/50">
+          Por segurança, a troca de senha é feita através de um link de verificação enviado ao seu e-mail.
+        </p>
+      </div>
+      <Button
+        variant="outline"
+        onClick={handleResetRequest}
+        disabled={isSending}
+        className="border-gold/30 text-gold hover:bg-gold/10 transition-all min-w-[160px]"
       >
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Old password"
-            name="old_password"
-            required
-            type="password"
-            data-testid="old-password-input"
-          />
-          <Input
-            label="New password"
-            type="password"
-            name="new_password"
-            required
-            data-testid="new-password-input"
-          />
-          <Input
-            label="Confirm password"
-            type="password"
-            name="confirm_password"
-            required
-            data-testid="confirm-password-input"
-          />
-        </div>
-      </AccountInfo>
-    </form>
+        {isSending ? (
+          <Loader2 className="animate-spin h-4 w-4" />
+        ) : (
+          <>
+            <Send className="h-4 w-4 mr-2" />
+            Solicitar Reset
+          </>
+        )}
+      </Button>
+    </div>
   )
 }
 

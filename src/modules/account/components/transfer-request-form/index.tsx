@@ -30,8 +30,8 @@ export default function TransferRequestForm() {
             Order transfers
           </Heading>
           <Text className="text-base-regular text-neutral-500">
-            Can&apos;t find the order you are looking for?
-            <br /> Connect an order to your account.
+            Não consegue encontrar o pedido que procura?
+            <br /> Conecte um pedido à sua conta.
           </Text>
         </div>
         <form
