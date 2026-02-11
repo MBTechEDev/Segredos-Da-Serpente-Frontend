@@ -80,6 +80,13 @@ const NavClient = ({ regions, categories }: NavClientProps) => {
                         >
                             Início
                         </LocalizedClientLink>
+                        <LocalizedClientLink
+                            href="/store"
+                            className={`text-sm font-medium hover:text-secondary transition-colors duration-300 tracking-wide uppercase ${pathname === "/" ? "text-secondary font-semibold" : "text-foreground/80"
+                                }`}
+                        >
+                            Loja
+                        </LocalizedClientLink>
 
                         {/* Mapeamento das Categorias */}
                         {categories && categories.map((cat) => {

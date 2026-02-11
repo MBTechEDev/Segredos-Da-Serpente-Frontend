@@ -1,3 +1,4 @@
+// Arquivo: src/app/[countryCode]/(main)/store/page.tsx
 import { Metadata } from "next"
 import { listCategories } from "@lib/data/categories"
 import { listProducts } from "@lib/data/products"
@@ -20,23 +21,31 @@ export default async function StorePage({ params, searchParams }: Props) {
   const sParams = await searchParams
 
   const region = await getRegion(countryCode)
-
-  // No Medusa v2, listCategories costuma retornar o array diretamente ou 
-  // um objeto com a propriedade product_categories.
   const categories = await listCategories()
 
-  // Regra de Ouro: Filtrar categorias raiz com tipagem estrita do Medusa
+  // Regra de Ouro: Filtrar categorias raiz no Server Component
   const rootCategories = categories.filter(
     (c: HttpTypes.StoreProductCategory) => !c.parent_category_id
   )
 
-  // Busca de produtos via SDK
+  /**
+   * Filtros Oficiais Medusa v2:
+   * Mapeamos os handles/IDs da URL para os filtros do Store Get Products
+   */
   const { response } = await listProducts({
     countryCode,
     queryParams: {
       limit: 12,
-      offset: 0,
-      // Aqui poderíamos passar filtros vindos de sParams
+      offset: sParams.offset ? parseInt(sParams.offset as string) : 0,
+      order: sParams.order as string,
+      // O Medusa v2 aceita array de IDs para categorias
+      category_id: Array.isArray(sParams.category_id)
+        ? sParams.category_id
+        : sParams.category_id ? [sParams.category_id] : undefined,
+      // Filtro de coleção se necessário
+      collection_id: Array.isArray(sParams.collection_id)
+        ? sParams.collection_id
+        : sParams.collection_id ? [sParams.collection_id] : undefined,
     }
   })
 
@@ -48,6 +57,7 @@ export default async function StorePage({ params, searchParams }: Props) {
       count={response.count}
       categories={rootCategories}
       region={region}
+      searchParams={sParams}
     />
   )
 }

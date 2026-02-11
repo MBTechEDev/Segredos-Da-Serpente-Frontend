@@ -45,13 +45,36 @@ const OrderOverview = ({ orders }: OrderOverviewProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h2 className="text-xl font-display text-gradient-gold">Meus Pedidos</h2>
+      <div className="flex flex-col gap-4 sm:flex-row items-start sm:items-center justify-between">
+        <h2 className="text-xl font-display text-gradient-gold">
+          Meus Pedidos
+        </h2>
+
         <Tabs value={filter} onValueChange={setFilter} className="w-full sm:w-auto">
-          <TabsList className="bg-background/50 border border-white/10 backdrop-blur-md">
-            <TabsTrigger value="todos">Todos</TabsTrigger>
-            <TabsTrigger value="andamento">Em Andamento</TabsTrigger>
-            <TabsTrigger value="concluidos">Concluídos</TabsTrigger>
+          {/* CORREÇÃO: 
+      1. 'overflow-x-auto' e 'no-scrollbar' permitem deslizar no mobile sem barra visual.
+      2. 'justify-start' impede que o conteúdo seja espremido.
+      3. 'w-full' garante que a base ocupe a largura disponível.
+    */}
+          <TabsList className="flex w-full justify-start overflow-x-auto overflow-y-hidden bg-background/50 border border-white/10 backdrop-blur-md p-1 no-scrollbar sm:w-auto">
+            <TabsTrigger
+              value="todos"
+              className="whitespace-nowrap data-[state=active]:text-secondary"
+            >
+              Todos
+            </TabsTrigger>
+            <TabsTrigger
+              value="andamento"
+              className="whitespace-nowrap data-[state=active]:text-secondary"
+            >
+              Em Andamento
+            </TabsTrigger>
+            <TabsTrigger
+              value="concluidos"
+              className="whitespace-nowrap data-[state=active]:text-secondary"
+            >
+              Concluídos
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
