@@ -23,7 +23,7 @@ const Shipping: React.FC<ShippingProps> = ({
   const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, number>>({})
   const [error, setError] = useState<string | null>(null)
 
-  // SOLUÇÃO ERRO 1: Usar undefined como fallback para bater com o tipo esperado
+  // Fallback para o ID do método já selecionado no carrinho
   const [shippingMethodId, setShippingMethodId] = useState<string | undefined>(
     cart.shipping_methods?.at(-1)?.shipping_option_id ?? undefined
   )
@@ -33,30 +33,50 @@ const Shipping: React.FC<ShippingProps> = ({
   const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "delivery"
-  const _shippingMethods = useMemo(() => availableShippingMethods || [], [availableShippingMethods])
 
+  const _shippingMethods = useMemo(() => {
+    return availableShippingMethods || []
+  }, [availableShippingMethods])
+
+  // Efeito para calcular preços de opções dinâmicas (Melhor Envio)
   useEffect(() => {
-    setIsLoadingPrices(true)
-    if (_shippingMethods.length) {
-      const promises = _shippingMethods
-        .filter((sm) => sm.price_type === "calculated")
-        .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
+    const fetchPrices = async () => {
+      if (!_shippingMethods.length) return
 
-      if (promises.length) {
-        Promise.allSettled(promises).then((res) => {
-          const pricesMap: Record<string, number> = {}
-          res.forEach((p) => {
-            if (p.status === "fulfilled" && p.value) {
-              pricesMap[p.value.id] = p.value.amount
-            }
-          })
-          setCalculatedPricesMap(pricesMap)
-          setIsLoadingPrices(false)
-        })
-      } else {
+      setIsLoadingPrices(true)
+      const calculatedMethods = _shippingMethods.filter((sm) => sm.price_type === "calculated")
+
+      if (calculatedMethods.length === 0) {
         setIsLoadingPrices(false)
+        return
       }
+
+      const pricesMap: Record<string, number> = {}
+
+      // Executa as cotações em paralelo para não travar o UI
+      const results = await Promise.allSettled(
+        calculatedMethods.map(async (sm) => {
+          const price = await calculatePriceForShippingOption(sm.id, cart.id)
+
+          // SOLUÇÃO: Garantir que o amount nunca seja null/undefined para o pricesMap
+          return {
+            id: sm.id,
+            amount: price?.amount ?? 0 // Se price.amount for null, assume 0 
+          }
+        })
+      )
+
+      results.forEach((result) => {
+        if (result.status === "fulfilled" && result.value) {
+          pricesMap[result.value.id] = result.value.amount
+        }
+      })
+
+      setCalculatedPricesMap(prev => ({ ...prev, ...pricesMap }))
+      setIsLoadingPrices(false)
     }
+
+    fetchPrices()
   }, [_shippingMethods, cart.id])
 
   const handleEdit = () => router.push(pathname + "?step=delivery", { scroll: false })
@@ -109,48 +129,64 @@ const Shipping: React.FC<ShippingProps> = ({
       {isOpen ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-4">
-            {/* SOLUÇÃO ERRO 2: Substituímos o Radio do HeadlessUI por divs nativas com onClick 
-                Isso remove o erro ts(2607) e mantém o controle total do estilo místico. */}
-            {_shippingMethods.map((option) => {
-              const isSelected = option.id === shippingMethodId
-              const amount = option.price_type === "flat"
-                ? option.amount
-                : calculatedPricesMap[option.id]
+            {_shippingMethods
+              .filter((option) => {
+                // Regra de Filtragem:
+                // 1. Flat Rate: Exibe sempre.
+                if (option.price_type === "flat") return true;
 
-              return (
-                <div
-                  key={option.id}
-                  onClick={() => handleSetShippingMethod(option.id)}
-                  className={clx(
-                    "relative flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all duration-300 bg-background/20",
-                    isSelected
-                      ? "border-secondary bg-secondary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]"
-                      : "border-border/40 hover:border-secondary/50"
-                  )}
-                >
-                  <div className="flex items-center gap-x-4">
-                    <div className={clx(
-                      "w-5 h-5 rounded-full border flex items-center justify-center transition-colors",
-                      isSelected ? "border-secondary bg-secondary" : "border-border"
-                    )}>
-                      {isSelected && <div className="w-2 h-2 rounded-full bg-background" />}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-display text-sm tracking-wide text-ui-fg-base uppercase">
-                        {option.name}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="font-medium text-secondary font-body">
-                    {amount !== undefined ? (
-                      convertToLocale({ amount, currency_code: cart.currency_code })
-                    ) : (
-                      <Loader2 className="animate-spin" size={16} />
+                // 2. Calculado: Verifica no mapa de preços.
+                const price = calculatedPricesMap[option.id];
+
+                // Se undefined (ainda carregando), mantém na lista para mostrar o spinner.
+                if (price === undefined) return true;
+
+                // Se tiver preço e for > 0, exibe. Se for 0 (erro do backend), esconde.
+                return price > 0;
+              })
+              .map((option) => {
+                const isSelected = option.id === shippingMethodId
+
+                // Define o valor: se for flat usa o fixo, se for calculado busca no map
+                const amount = option.price_type === "flat"
+                  ? (option.amount as number)
+                  : calculatedPricesMap[option.id]
+
+                return (
+                  <div
+                    key={option.id}
+                    onClick={() => !isLoadingPrices && handleSetShippingMethod(option.id)}
+                    className={clx(
+                      "relative flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all duration-300 bg-background/20",
+                      isSelected
+                        ? "border-secondary bg-secondary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+                        : "border-border/40 hover:border-secondary/50",
+                      isLoadingPrices && "opacity-50 cursor-not-allowed"
                     )}
-                  </span>
-                </div>
-              )
-            })}
+                  >
+                    <div className="flex items-center gap-x-4">
+                      <div className={clx(
+                        "w-5 h-5 rounded-full border flex items-center justify-center transition-colors",
+                        isSelected ? "border-secondary bg-secondary" : "border-border"
+                      )}>
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-background" />}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-display text-sm tracking-wide text-ui-fg-base uppercase">
+                          {option.name}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="font-medium text-secondary font-body">
+                      {amount !== undefined ? (
+                        convertToLocale({ amount, currency_code: cart.currency_code })
+                      ) : (
+                        <Loader2 className="animate-spin" size={16} />
+                      )}
+                    </span>
+                  </div>
+                )
+              })}
           </div>
 
           <div className="pt-4 border-t border-border/30">
@@ -159,7 +195,7 @@ const Shipping: React.FC<ShippingProps> = ({
               className="w-full cta-primary h-12 text-base uppercase tracking-widest font-display"
               onClick={handleSubmit}
               isLoading={isLoading}
-              disabled={!hasSelectedMethod}
+              disabled={!hasSelectedMethod || isLoadingPrices}
               variant="secondary"
             >
               Continuar
