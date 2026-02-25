@@ -167,6 +167,65 @@ export default function MPCardContainer({
 
                 getIdentificationTypes()
 
+                // Finalizando Instrução 7: Criando Token e validando
+                const formElement = document.getElementById('form-checkout') as HTMLFormElement
+                const createCardToken = async (event: Event) => {
+                    try {
+                        const tokenElement = document.getElementById('token') as HTMLInputElement
+                        if (!tokenElement.value) {
+                            event.preventDefault()
+
+                            const cardholderNameEl = document.getElementById('form-checkout__cardholderName') as HTMLInputElement
+                            const identificationTypeEl = document.getElementById('form-checkout__identificationType') as HTMLSelectElement
+                            const identificationNumberEl = document.getElementById('form-checkout__identificationNumber') as HTMLInputElement
+
+                            const token = await mp.fields.createCardToken({
+                                cardholderName: cardholderNameEl.value,
+                                identificationType: identificationTypeEl.value,
+                                identificationNumber: identificationNumberEl.value,
+                            })
+                            tokenElement.value = token.id
+
+                            // Integração Next.js Seguro: em vez de requestSubmit, prosseguimos no State
+                            setError(null)
+                            const paymentMethodElement = document.getElementById('paymentMethodId') as HTMLInputElement
+                            const issuerElement = document.getElementById('form-checkout__issuer') as HTMLSelectElement
+                            const installmentsElement = document.getElementById('form-checkout__installments') as HTMLSelectElement
+                            const emailEl = document.getElementById('form-checkout__email') as HTMLInputElement
+
+                            await initiatePaymentSession(cart, {
+                                provider_id: "pp_mercadopago_mercadopago",
+                                data: {
+                                    token: token.id,
+                                    payment_method_id: paymentMethodElement.value,
+                                    issuer_id: issuerElement.value,
+                                    installments: installmentsElement.value,
+                                    payer: {
+                                        email: emailEl.value,
+                                        identification: {
+                                            type: identificationTypeEl.value,
+                                            number: identificationNumberEl.value
+                                        }
+                                    }
+                                }
+                            })
+
+                            setCardComplete(true)
+                            setCardBrand(paymentMethodElement.value)
+                            onSuccess()
+                        }
+                    } catch (e: any) {
+                        console.error('error creating card token: ', e)
+                        const errorMessage = e?.[0]?.message || e?.message || "Erro ao processar o formulário. Verifique os dados inseridos."
+                        setError(errorMessage)
+                    }
+                }
+
+                    // Salvar referência globalmente para o cleanup
+                    ; (window as any).__mpSubmitCallback = createCardToken
+                    ; (window as any).__mpFormElement = formElement
+                formElement.addEventListener('submit', createCardToken)
+
             } catch (error) {
                 console.error("SDK Load Error:", error)
                 setError("Não foi possível carregar o módulo de pagamento.")
@@ -174,6 +233,15 @@ export default function MPCardContainer({
         }
 
         initMP()
+
+        return () => {
+            const formElement = (window as any).__mpFormElement
+            const submitCallback = (window as any).__mpSubmitCallback
+            if (formElement && submitCallback) {
+                formElement.removeEventListener('submit', submitCallback)
+            }
+            isMounted.current = false
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
