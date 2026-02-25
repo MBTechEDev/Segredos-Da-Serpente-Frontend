@@ -99,8 +99,10 @@ export default function MPCardContainer({
                             paymentMethodElement.value = paymentMethod.id
                             updatePCIFieldsSettings(paymentMethod)
 
+                            // 5º Instrução: Atualizar emissor
+                            updateIssuer(paymentMethod, bin)
+
                             // As próximas funções virão nas instruções 5 e 6:
-                            // updateIssuer(paymentMethod, bin);
                             // updateInstallments(paymentMethod, bin);
                         }
 
@@ -109,6 +111,26 @@ export default function MPCardContainer({
                         console.error('error getting payment methods: ', e)
                     }
                 })
+
+                const getIssuers = async (paymentMethod: any, bin: string) => {
+                    try {
+                        const { id: paymentMethodId } = paymentMethod
+                        return await mp.getIssuers({ paymentMethodId, bin })
+                    } catch (e) {
+                        console.error('error getting issuers: ', e)
+                    }
+                }
+
+                const updateIssuer = async (paymentMethod: any, bin: string) => {
+                    const { additional_info_needed, issuer } = paymentMethod
+                    let issuerOptions = [issuer]
+
+                    if (additional_info_needed.includes('issuer_id')) {
+                        issuerOptions = await getIssuers(paymentMethod, bin)
+                    }
+
+                    createSelectOptions(issuerElement, issuerOptions)
+                }
 
                 // Obter tipos de documentos
                 const getIdentificationTypes = async () => {
