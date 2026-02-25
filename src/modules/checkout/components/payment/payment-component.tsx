@@ -8,9 +8,7 @@ import MPCardContainer from "@modules/checkout/components/payment-container/mp-c
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
-import { HttpTypes } from "@medusajs/types"
-
-const Payment = ({ cart }: { cart: HttpTypes.StoreCart & { gift_cards?: any[] } }) => {
+const Payment = ({ cart }: { cart: any }) => {
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (s: any) => s.status === "pending" || s.status === "requires_more"
   )
@@ -73,24 +71,10 @@ const Payment = ({ cart }: { cart: HttpTypes.StoreCart & { gift_cards?: any[] } 
     setIsLoading(true)
     setError(null)
     try {
-      // Mercado Pago exige o envio dos dados do pagador para autorizar o PIX
-      const payerData = {
-        email: cart.email,
-        first_name: cart.billing_address?.first_name || cart.shipping_address?.first_name,
-        last_name: cart.billing_address?.last_name || cart.shipping_address?.last_name,
-        address: {
-          zip_code: cart.billing_address?.postal_code || cart.shipping_address?.postal_code,
-          street_name: cart.billing_address?.address_1 || cart.shipping_address?.address_1,
-        }
-      }
-
-      // Injeta na sessão que a intenção é pagar com PIX + Dados do Payer
+      // Injeta na sessão que a intenção é pagar com PIX
       await initiatePaymentSession(cart, {
         provider_id: "pp_mercadopago_mercadopago",
-        data: {
-          payment_method_id: "pix",
-          payer: payerData
-        }
+        data: { payment_method_id: "pix" }
       })
       goToReview()
     } catch (err: any) {
@@ -191,7 +175,7 @@ const Payment = ({ cart }: { cart: HttpTypes.StoreCart & { gift_cards?: any[] } 
                           Pagamento rápido e seguro via PIX.
                         </Text>
                         <Text className="text-ui-fg-subtle text-sm max-w-md">
-                          Clique em "Revisar Pedido". O código QR e a chave Copia e Cola serão gerados na próxima tela para você finalizar a compra.
+                          Clique em "Revisar Pedido". O código QR será gerado no próximo passo, <strong>após você finalizar sua compra</strong>.
                         </Text>
                       </div>
 

@@ -6,9 +6,7 @@ import { ShieldCheck, FileText, Check, MapPin, Truck, CreditCard, QrCode, Edit3 
 import PaymentButton from "../payment-button"
 import { useCallback } from "react"
 
-import { HttpTypes } from "@medusajs/types"
-
-const Review = ({ cart }: { cart: HttpTypes.StoreCart & { gift_cards?: any[] } }) => {
+const Review = ({ cart }: { cart: any }) => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -32,9 +30,9 @@ const Review = ({ cart }: { cart: HttpTypes.StoreCart & { gift_cards?: any[] } }
     (s: any) => s.status === "pending" || s.status === "requires_more" || s.status === "authorized"
   )
 
-  const paymentData = activeSession?.data as Record<string, any> | undefined
+  const paymentData = activeSession?.data
   const isPix = paymentData?.payment_method_id === "pix"
-  const cardBrand = paymentData?.payment_method_id && !isPix ? String(paymentData.payment_method_id).toUpperCase() : ""
+  const cardBrand = paymentData?.payment_method_id && !isPix ? paymentData.payment_method_id.toUpperCase() : ""
 
   // Função para navegar de volta a um passo específico
   const createQueryString = useCallback(

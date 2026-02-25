@@ -15,11 +15,11 @@ import CheckoutSummary from "../checkout-summary"
 export default function CheckoutForm({
   cart,
   customer,
-  availableShippingMethods, // <--- NOVA PROP RECEBIDA
+  availableShippingMethods,
 }: {
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
-  availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null // <--- TIPAGEM ADICIONADA
+  availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null
 }) {
   const searchParams = useSearchParams()
   const step = searchParams.get("step") || "address"
@@ -46,7 +46,6 @@ export default function CheckoutForm({
         return (
           <Payment
             cart={cart}
-            availablePaymentMethods={cart.payment_collection?.payment_sessions as any}
           />
         )
       case "review":

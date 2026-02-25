@@ -34,6 +34,10 @@ export const paymentInfoMap: Record<
     title: "Manual Payment",
     icon: <CreditCard />,
   },
+  "pp_mercadopago_mercadopago": {
+    title: "Mercado Pago",
+    icon: <CreditCard />,
+  },
   // Add more payment providers here
 }
 
