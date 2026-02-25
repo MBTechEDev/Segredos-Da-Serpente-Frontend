@@ -59,6 +59,57 @@ export default function MPCardContainer({
                     style
                 }).mount('form-checkout__securityCode')
 
+                // Update PCI Fields
+                const updatePCIFieldsSettings = (paymentMethod: any) => {
+                    const { settings } = paymentMethod
+
+                    const cardNumberSettings = settings[0].card_number
+                    cardNumberElement.update({
+                        settings: cardNumberSettings
+                    })
+
+                    const securityCodeSettings = settings[0].security_code
+                    securityCodeElement.update({
+                        settings: securityCodeSettings
+                    })
+                }
+
+                // Handle bin change behavior
+                const paymentMethodElement = document.getElementById('paymentMethodId') as HTMLInputElement
+                const issuerElement = document.getElementById('form-checkout__issuer') as HTMLSelectElement
+                const installmentsElement = document.getElementById('form-checkout__installments') as HTMLSelectElement
+
+                const issuerPlaceholder = "Banco emissor"
+                const installmentsPlaceholder = "Parcelas"
+
+                let currentBin: string | undefined
+
+                cardNumberElement.on('binChange', async (data: any) => {
+                    const { bin } = data
+                    try {
+                        if (!bin && paymentMethodElement.value) {
+                            clearSelectsAndSetPlaceholders(issuerElement, issuerPlaceholder, installmentsElement, installmentsPlaceholder)
+                            paymentMethodElement.value = ""
+                        }
+
+                        if (bin && bin !== currentBin) {
+                            const { results } = await mp.getPaymentMethods({ bin })
+                            const paymentMethod = results[0]
+
+                            paymentMethodElement.value = paymentMethod.id
+                            updatePCIFieldsSettings(paymentMethod)
+
+                            // As próximas funções virão nas instruções 5 e 6:
+                            // updateIssuer(paymentMethod, bin);
+                            // updateInstallments(paymentMethod, bin);
+                        }
+
+                        currentBin = bin
+                    } catch (e) {
+                        console.error('error getting payment methods: ', e)
+                    }
+                })
+
                 // Obter tipos de documentos
                 const getIdentificationTypes = async () => {
                     try {
@@ -104,6 +155,31 @@ export default function MPCardContainer({
         })
 
         elem.appendChild(tempOptions)
+    }
+
+    const clearHTMLSelectChildrenFrom = (element: HTMLSelectElement) => {
+        const currOptions = [...Array.from(element.children)]
+        currOptions.forEach(child => child.remove())
+    }
+
+    const createSelectElementPlaceholder = (element: HTMLSelectElement, placeholder: string) => {
+        const optionElement = document.createElement('option')
+        optionElement.textContent = placeholder
+        optionElement.setAttribute('selected', "")
+        optionElement.setAttribute('disabled', "")
+
+        element.appendChild(optionElement)
+    }
+
+    const clearSelectsAndSetPlaceholders = (
+        issuerEl: HTMLSelectElement, issuerPlaceholder: string,
+        installmentsEl: HTMLSelectElement, installmentsPlaceholder: string
+    ) => {
+        clearHTMLSelectChildrenFrom(issuerEl)
+        createSelectElementPlaceholder(issuerEl, issuerPlaceholder)
+
+        clearHTMLSelectChildrenFrom(installmentsEl)
+        createSelectElementPlaceholder(installmentsEl, installmentsPlaceholder)
     }
 
     const inputClasses = "w-full min-h-[44px] px-3 py-2 bg-[#080c0a]/50 border border-[#27342f] text-[#ebe7d9] rounded-md focus:outline-none focus:ring-1 focus:ring-[#d69e26] focus:border-[#d69e26] transition-all duration-300 placeholder:text-[#808f8a]"
