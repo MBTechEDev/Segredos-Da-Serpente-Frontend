@@ -103,7 +103,7 @@ export default function MPCardContainer({
                             updateIssuer(paymentMethod, bin)
 
                             // As próximas funções virão nas instruções 5 e 6:
-                            // updateInstallments(paymentMethod, bin);
+                            updateInstallments(paymentMethod, bin)
                         }
 
                         currentBin = bin
@@ -130,6 +130,25 @@ export default function MPCardContainer({
                     }
 
                     createSelectOptions(issuerElement, issuerOptions)
+                }
+
+                const updateInstallments = async (paymentMethod: any, bin: string) => {
+                    try {
+                        const amountElement = document.getElementById('transactionAmount') as HTMLInputElement
+
+                        const installments = await mp.getInstallments({
+                            amount: amountElement.value,
+                            bin,
+                            paymentTypeId: 'credit_card'
+                        })
+
+                        const installmentOptions = installments[0].payer_costs
+                        const installmentOptionsKeys = { label: 'recommended_message', value: 'installments' }
+
+                        createSelectOptions(installmentsElement, installmentOptions, installmentOptionsKeys)
+                    } catch (error) {
+                        console.error('error getting installments: ', error)
+                    }
                 }
 
                 // Obter tipos de documentos
