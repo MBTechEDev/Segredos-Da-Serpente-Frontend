@@ -200,12 +200,22 @@ export default function MPCardContainer({
                                     payment_method_id: paymentMethodElement.value,
                                     issuer_id: issuerElement.value,
                                     installments: installmentsElement.value,
+                                    device_id: (window as any).MP_DEVICE_SESSION_ID || undefined,
                                     payer: {
                                         email: emailEl.value,
+                                        first_name: cardholderNameEl.value.split(" ")[0],
+                                        last_name: cardholderNameEl.value.split(" ").slice(1).join(" ") || "",
                                         identification: {
                                             type: identificationTypeEl.value,
                                             number: identificationNumberEl.value
-                                        }
+                                        },
+                                        address: cart?.shipping_address ? {
+                                            zip_code: cart.shipping_address.postal_code,
+                                            street_name: cart.shipping_address.address_1,
+                                            street_number: cart.shipping_address.address_2 || "S/N",
+                                            city: cart.shipping_address.city,
+                                            federal_unit: cart.shipping_address.province
+                                        } : undefined
                                     }
                                 }
                             })

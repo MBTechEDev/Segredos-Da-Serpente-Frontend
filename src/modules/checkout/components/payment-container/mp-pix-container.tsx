@@ -69,6 +69,7 @@ export default function MPPixContainer({
                             provider_id: "pp_mercadopago_mercadopago",
                             data: {
                                 payment_method_id: "pix",
+                                device_id: (window as any).MP_DEVICE_SESSION_ID || undefined,
                                 payer: {
                                     email: emailEl.value,
                                     first_name: firstNameEl.value,
@@ -76,7 +77,14 @@ export default function MPPixContainer({
                                     identification: {
                                         type: identificationTypeEl.value,
                                         number: identificationNumberEl.value
-                                    }
+                                    },
+                                    address: cart?.shipping_address ? {
+                                        zip_code: cart.shipping_address.postal_code,
+                                        street_name: cart.shipping_address.address_1,
+                                        street_number: cart.shipping_address.address_2 || "S/N",
+                                        city: cart.shipping_address.city,
+                                        federal_unit: cart.shipping_address.province
+                                    } : undefined
                                 }
                             }
                         })
