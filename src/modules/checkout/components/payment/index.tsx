@@ -5,6 +5,7 @@ import { Button, Text, clx } from "@medusajs/ui"
 import { Check, CreditCard, Edit3, Lock, ShieldCheck, QrCode, Loader2 } from "lucide-react"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import MPCardContainer from "@modules/checkout/components/payment-container/mp-card-container"
+import MPPixContainer from "@modules/checkout/components/payment-container/mp-pix-container"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
@@ -190,19 +191,19 @@ const Payment = ({ cart }: { cart: HttpTypes.StoreCart & { gift_cards?: any[] } 
                         <Text className="text-ui-fg-base font-body text-lg italic mb-2">
                           Pagamento rápido e seguro via PIX.
                         </Text>
-                        <Text className="text-ui-fg-subtle text-sm max-w-md">
-                          Clique em "Revisar Pedido". O código QR e a chave Copia e Cola serão gerados na próxima tela para você finalizar a compra.
+                        <Text className="text-ui-fg-subtle text-sm max-w-md mb-6">
+                          Preencha os dados abaixo com o nome e documento do pagador. O código QR será gerado na próxima etapa.
                         </Text>
-                      </div>
 
-                      <Button
-                        className="w-full cta-primary h-12 text-base uppercase tracking-widest font-display mt-4"
-                        onClick={handlePixSubmit}
-                        isLoading={isLoading}
-                        variant="secondary"
-                      >
-                        Revisar Pedido
-                      </Button>
+                        <div className="w-full text-left">
+                          <MPPixContainer
+                            cart={cart}
+                            setPixComplete={setCardComplete} // Reutilizando a mesma flag para desbloquear a UI
+                            setError={setError}
+                            onSuccess={goToReview}
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>

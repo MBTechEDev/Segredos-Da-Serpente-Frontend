@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { initiatePaymentSession } from "@lib/data/cart"
-import { loadMercadoPago } from "@mercadopago/sdk-js"
+import { initMercadoPago, getIdentificationTypes, getPaymentMethods, getIssuers, getInstallments } from "@mercadopago/sdk-react"
 
 type MPCardContainerProps = {
     cart: any
@@ -33,7 +33,36 @@ export default function MPCardContainer({
                     return
                 }
 
-                await loadMercadoPago()
+                initMercadoPago(publicKey, { locale: "pt-BR" })
+
+                // Injeta manualmente o script da SDK V2 (pois initMercadoPago do React SDK não o faz no modo headless)
+                await new Promise<void>((resolve, reject) => {
+                    if ((window as any).MercadoPago) {
+                        return resolve()
+                    }
+
+                    let script = document.querySelector('script[src="https://sdk.mercadopago.com/js/v2"]') as HTMLScriptElement
+                    if (!script) {
+                        script = document.createElement('script')
+                        script.src = "https://sdk.mercadopago.com/js/v2"
+                        script.async = true
+                        document.body.appendChild(script)
+                    }
+
+                    const onScriptLoad = () => resolve()
+                    const onScriptError = () => reject(new Error("Failed to load MercadoPago SDK script"))
+
+                    script.addEventListener('load', onScriptLoad)
+                    script.addEventListener('error', onScriptError)
+
+                    const fallbackCheck = setInterval(() => {
+                        if ((window as any).MercadoPago) {
+                            clearInterval(fallbackCheck)
+                            resolve()
+                        }
+                    }, 100)
+                })
+
                 const mp = new (window as any).MercadoPago(publicKey, { locale: "pt-BR" })
 
                 // Inicializar campos do cartão com estilos do tema
@@ -93,8 +122,9 @@ export default function MPCardContainer({
                         }
 
                         if (bin && bin !== currentBin) {
-                            const { results } = await mp.getPaymentMethods({ bin })
-                            const paymentMethod = results[0]
+                            const methods = await getPaymentMethods({ bin })
+                            if (!methods || !methods.results || methods.results.length === 0) return
+                            const paymentMethod = methods.results[0]
 
                             paymentMethodElement.value = paymentMethod.id
                             updatePCIFieldsSettings(paymentMethod)
@@ -112,10 +142,11 @@ export default function MPCardContainer({
                     }
                 })
 
-                const getIssuers = async (paymentMethod: any, bin: string) => {
+                const fetchIssuers = async (paymentMethod: any, bin: string) => {
                     try {
                         const { id: paymentMethodId } = paymentMethod
-                        return await mp.getIssuers({ paymentMethodId, bin })
+                        const issuers = await getIssuers({ paymentMethodId, bin })
+                        return issuers || []
                     } catch (e) {
                         console.error('error getting issuers: ', e)
                     }
@@ -126,7 +157,7 @@ export default function MPCardContainer({
                     let issuerOptions = [issuer]
 
                     if (additional_info_needed.includes('issuer_id')) {
-                        issuerOptions = await getIssuers(paymentMethod, bin)
+                        issuerOptions = await fetchIssuers(paymentMethod, bin) || []
                     }
 
                     createSelectOptions(issuerElement, issuerOptions)
@@ -136,11 +167,12 @@ export default function MPCardContainer({
                     try {
                         const amountElement = document.getElementById('transactionAmount') as HTMLInputElement
 
-                        const installments = await mp.getInstallments({
+                        const installments = await getInstallments({
                             amount: amountElement.value,
                             bin,
                             paymentTypeId: 'credit_card'
                         })
+                        if (!installments || installments.length === 0) return
 
                         const installmentOptions = installments[0].payer_costs
                         const installmentOptionsKeys = { label: 'recommended_message', value: 'installments' }
@@ -151,13 +183,12 @@ export default function MPCardContainer({
                     }
                 }
 
-                // Obter tipos de documentos
-                const getIdentificationTypes = async () => {
+                const fetchIdentificationTypes = async () => {
                     try {
-                        const identificationTypes = await mp.getIdentificationTypes()
+                        const identificationTypes = await getIdentificationTypes()
                         const identificationTypeElement = document.getElementById('form-checkout__identificationType') as HTMLSelectElement
 
-                        if (identificationTypeElement) {
+                        if (identificationTypeElement && identificationTypes) {
                             createSelectOptions(identificationTypeElement, identificationTypes)
                         }
                     } catch (e) {
@@ -165,7 +196,7 @@ export default function MPCardContainer({
                     }
                 }
 
-                getIdentificationTypes()
+                fetchIdentificationTypes()
 
                 // Finalizando Instrução 7: Criando Token e validando
                 const formElement = document.getElementById('form-checkout') as HTMLFormElement
@@ -179,10 +210,22 @@ export default function MPCardContainer({
                             const identificationTypeEl = document.getElementById('form-checkout__identificationType') as HTMLSelectElement
                             const identificationNumberEl = document.getElementById('form-checkout__identificationNumber') as HTMLInputElement
 
+                            const nameParts = cardholderNameEl.value.trim().split(" ")
+                            if (nameParts.length < 2) {
+                                throw new Error("Por favor, informe o nome completo (nome e sobrenome) do titular do cartão.")
+                            }
+                            const firstName = nameParts[0]
+                            const lastName = nameParts.slice(1).join(" ")
+
+                            const docNumber = identificationNumberEl.value.replace(/\D/g, "")
+                            if (!docNumber) {
+                                throw new Error("Por favor, informe o número do documento.")
+                            }
+
                             const token = await mp.fields.createCardToken({
-                                cardholderName: cardholderNameEl.value,
+                                cardholderName: cardholderNameEl.value.trim(),
                                 identificationType: identificationTypeEl.value,
-                                identificationNumber: identificationNumberEl.value,
+                                identificationNumber: docNumber,
                             })
                             tokenElement.value = token.id
 
@@ -193,21 +236,21 @@ export default function MPCardContainer({
                             const installmentsElement = document.getElementById('form-checkout__installments') as HTMLSelectElement
                             const emailEl = document.getElementById('form-checkout__email') as HTMLInputElement
 
-                            await initiatePaymentSession(cart, {
+                            const payload = {
                                 provider_id: "pp_mercadopago_mercadopago",
                                 data: {
                                     token: token.id,
                                     payment_method_id: paymentMethodElement.value,
                                     issuer_id: issuerElement.value,
-                                    installments: installmentsElement.value,
+                                    installments: Number(installmentsElement.value),
                                     device_id: (window as any).MP_DEVICE_SESSION_ID || undefined,
                                     payer: {
-                                        email: emailEl.value,
-                                        first_name: cardholderNameEl.value.split(" ")[0],
-                                        last_name: cardholderNameEl.value.split(" ").slice(1).join(" ") || "",
+                                        email: emailEl.value.trim(),
+                                        first_name: firstName,
+                                        last_name: lastName,
                                         identification: {
                                             type: identificationTypeEl.value,
-                                            number: identificationNumberEl.value
+                                            number: docNumber
                                         },
                                         address: cart?.shipping_address ? {
                                             zip_code: cart.shipping_address.postal_code,
@@ -218,7 +261,11 @@ export default function MPCardContainer({
                                         } : undefined
                                     }
                                 }
-                            })
+                            }
+
+                            console.log("[MercadoPago Card] Sending Payload:", JSON.stringify(payload, null, 2))
+
+                            await initiatePaymentSession(cart, payload)
 
                             setCardComplete(true)
                             setCardBrand(paymentMethodElement.value)
@@ -325,19 +372,19 @@ export default function MPCardContainer({
 
             <div>
                 <label htmlFor="form-checkout__cardholderName" className={labelClasses}>Titular do Cartão</label>
-                <input type="text" id="form-checkout__cardholderName" name="cardholderName" className={inputClasses} placeholder="Nome como está no cartão" />
+                <input type="text" id="form-checkout__cardholderName" name="cardholderName" className={inputClasses} placeholder="Nome como está no cartão" required />
             </div>
 
             <div>
                 <label htmlFor="form-checkout__issuer" className={labelClasses}>Banco Emissor</label>
-                <select id="form-checkout__issuer" name="issuer" className={inputClasses} defaultValue="">
+                <select id="form-checkout__issuer" name="issuer" className={inputClasses} defaultValue="" required>
                     <option value="" disabled>Selecione o banco emissor</option>
                 </select>
             </div>
 
             <div>
                 <label htmlFor="form-checkout__installments" className={labelClasses}>Parcelas</label>
-                <select id="form-checkout__installments" name="installments" className={inputClasses} defaultValue="">
+                <select id="form-checkout__installments" name="installments" className={inputClasses} defaultValue="" required>
                     <option value="" disabled>Selecione a quantidade de parcelas</option>
                 </select>
             </div>
@@ -345,26 +392,26 @@ export default function MPCardContainer({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label htmlFor="form-checkout__identificationType" className={labelClasses}>Tipo de Documento</label>
-                    <select id="form-checkout__identificationType" name="identificationType" className={inputClasses} defaultValue="">
+                    <select id="form-checkout__identificationType" name="identificationType" className={inputClasses} defaultValue="" required>
                         <option value="" disabled>Tipo</option>
                     </select>
                 </div>
                 <div>
                     <label htmlFor="form-checkout__identificationNumber" className={labelClasses}>Número do Documento</label>
-                    <input type="text" id="form-checkout__identificationNumber" name="identificationNumber" className={inputClasses} placeholder="Número do documento" />
+                    <input type="text" id="form-checkout__identificationNumber" name="identificationNumber" className={inputClasses} placeholder="Número do documento" required />
                 </div>
             </div>
 
             <div>
                 <label htmlFor="form-checkout__email" className={labelClasses}>E-mail</label>
                 <input type="email" id="form-checkout__email" name="email" className={inputClasses} placeholder="E-mail"
-                    defaultValue={cart?.email || ""} />
+                    defaultValue={cart?.email || ""} required />
             </div>
 
             {/* Campos ocultos necessários para o Mercado Pago */}
             <input id="token" name="token" type="hidden" />
             <input id="paymentMethodId" name="paymentMethodId" type="hidden" />
-            <input id="transactionAmount" name="transactionAmount" type="hidden" value={cart?.total ? (cart.total / 100).toString() : "100"} />
+            <input id="transactionAmount" name="transactionAmount" type="hidden" value={cart?.total ? (cart.total / 100).toString() : ""} />
             <input id="description" name="description" type="hidden" value="Compra - Segredos da Serpente" />
 
             <button

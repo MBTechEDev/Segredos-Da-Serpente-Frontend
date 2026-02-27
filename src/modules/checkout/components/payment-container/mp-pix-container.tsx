@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { initiatePaymentSession } from "@lib/data/cart"
-import { loadMercadoPago } from "@mercadopago/sdk-js"
+import { initMercadoPago, getIdentificationTypes } from "@mercadopago/sdk-react"
 
 type MPPixContainerProps = {
     cart: any
@@ -31,16 +31,44 @@ export default function MPPixContainer({
                     return
                 }
 
-                await loadMercadoPago()
+                initMercadoPago(publicKey, { locale: "pt-BR" })
+
+                // Injeta manualmente o script da SDK V2 (pois initMercadoPago do React SDK não o faz no modo headless)
+                await new Promise<void>((resolve, reject) => {
+                    if ((window as any).MercadoPago) {
+                        return resolve()
+                    }
+
+                    let script = document.querySelector('script[src="https://sdk.mercadopago.com/js/v2"]') as HTMLScriptElement
+                    if (!script) {
+                        script = document.createElement('script')
+                        script.src = "https://sdk.mercadopago.com/js/v2"
+                        script.async = true
+                        document.body.appendChild(script)
+                    }
+
+                    const onScriptLoad = () => resolve()
+                    const onScriptError = () => reject(new Error("Failed to load MercadoPago SDK script"))
+
+                    script.addEventListener('load', onScriptLoad)
+                    script.addEventListener('error', onScriptError)
+
+                    const fallbackCheck = setInterval(() => {
+                        if ((window as any).MercadoPago) {
+                            clearInterval(fallbackCheck)
+                            resolve()
+                        }
+                    }, 100)
+                })
+
                 const mp = new (window as any).MercadoPago(publicKey, { locale: "pt-BR" })
 
-                // Obter tipos de documentos
-                const getIdentificationTypes = async () => {
+                const fetchIdentificationTypes = async () => {
                     try {
-                        const identificationTypes = await mp.getIdentificationTypes()
+                        const identificationTypes = await getIdentificationTypes()
                         const identificationTypeElement = document.getElementById('form-checkout-pix__identificationType') as HTMLSelectElement
 
-                        if (identificationTypeElement) {
+                        if (identificationTypeElement && identificationTypes) {
                             createSelectOptions(identificationTypeElement, identificationTypes)
                         }
                     } catch (e) {
@@ -48,7 +76,7 @@ export default function MPPixContainer({
                     }
                 }
 
-                getIdentificationTypes()
+                fetchIdentificationTypes()
 
                 // Finalizando Instrução: Enviando dados e validando
                 const formElement = document.getElementById('form-checkout-pix') as HTMLFormElement
@@ -62,21 +90,32 @@ export default function MPPixContainer({
                         const identificationTypeEl = document.getElementById('form-checkout-pix__identificationType') as HTMLSelectElement
                         const identificationNumberEl = document.getElementById('form-checkout-pix__identificationNumber') as HTMLInputElement
 
+                        const firstName = firstNameEl.value.trim()
+                        const lastName = lastNameEl.value.trim()
+                        const docNumber = identificationNumberEl.value.replace(/\D/g, "")
+
+                        if (!firstName || !lastName) {
+                            throw new Error("Por favor, preencha o nome e sobrenome.")
+                        }
+                        if (!docNumber) {
+                            throw new Error("Por favor, informe o número do documento.")
+                        }
+
                         // Integração Next.js Seguro: prosseguimos no State
                         setError(null)
 
-                        await initiatePaymentSession(cart, {
+                        const payload = {
                             provider_id: "pp_mercadopago_mercadopago",
                             data: {
                                 payment_method_id: "pix",
                                 device_id: (window as any).MP_DEVICE_SESSION_ID || undefined,
                                 payer: {
-                                    email: emailEl.value,
-                                    first_name: firstNameEl.value,
-                                    last_name: lastNameEl.value,
+                                    email: emailEl.value.trim(),
+                                    first_name: firstName,
+                                    last_name: lastName,
                                     identification: {
                                         type: identificationTypeEl.value,
-                                        number: identificationNumberEl.value
+                                        number: docNumber
                                     },
                                     address: cart?.shipping_address ? {
                                         zip_code: cart.shipping_address.postal_code,
@@ -87,7 +126,11 @@ export default function MPPixContainer({
                                     } : undefined
                                 }
                             }
-                        })
+                        }
+
+                        console.log("[MercadoPago Pix] Sending Payload:", JSON.stringify(payload, null, 2))
+
+                        await initiatePaymentSession(cart, payload)
 
                         setPixComplete(true)
                         onSuccess()
@@ -180,7 +223,7 @@ export default function MPPixContainer({
             </div>
 
             <div className="pt-2">
-                <input type="hidden" name="transactionAmount" id="transactionAmountPix" value={cart?.total ? (cart.total / 100).toString() : "0"} />
+                <input type="hidden" name="transactionAmount" id="transactionAmountPix" value={cart?.total ? (cart.total / 100).toString() : ""} />
                 <button type="submit" className="w-full bg-[#d69e26] hover:bg-[#b5851f] text-[#080c0a] font-display uppercase tracking-widest py-3 px-4 rounded-md font-semibold transition-colors duration-300 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
                     Pagar com Pix
                 </button>
