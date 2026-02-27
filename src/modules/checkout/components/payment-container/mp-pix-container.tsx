@@ -31,7 +31,10 @@ export default function MPPixContainer({
                     return
                 }
 
-                initMercadoPago(publicKey, { locale: "pt-BR" })
+                if (!(window as any).__MERCADOPAGO_INITIALIZED__) {
+                    initMercadoPago(publicKey, { locale: "pt-BR" })
+                        ; (window as any).__MERCADOPAGO_INITIALIZED__ = true
+                }
 
                 // Injeta manualmente o script da SDK V2 (pois initMercadoPago do React SDK não o faz no modo headless)
                 await new Promise<void>((resolve, reject) => {
@@ -62,6 +65,8 @@ export default function MPPixContainer({
                 })
 
                 const mp = new (window as any).MercadoPago(publicKey, { locale: "pt-BR" })
+
+                if (!isMounted.current) return
 
                 const fetchIdentificationTypes = async () => {
                     try {
@@ -145,7 +150,7 @@ export default function MPPixContainer({
                     // Salvar referência globalmente para o cleanup
                     ; (window as any).__mpPixSubmitCallback = processPix
                     ; (window as any).__mpPixFormElement = formElement
-                formElement.addEventListener('submit', processPix)
+                if (formElement) formElement.addEventListener('submit', processPix)
 
             } catch (error) {
                 console.error("SDK Load Error:", error)

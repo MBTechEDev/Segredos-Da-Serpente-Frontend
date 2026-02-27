@@ -33,7 +33,10 @@ export default function MPCardContainer({
                     return
                 }
 
-                initMercadoPago(publicKey, { locale: "pt-BR" })
+                if (!(window as any).__MERCADOPAGO_INITIALIZED__) {
+                    initMercadoPago(publicKey, { locale: "pt-BR" })
+                        ; (window as any).__MERCADOPAGO_INITIALIZED__ = true
+                }
 
                 // Injeta manualmente o script da SDK V2 (pois initMercadoPago do React SDK não o faz no modo headless)
                 await new Promise<void>((resolve, reject) => {
@@ -64,6 +67,8 @@ export default function MPCardContainer({
                 })
 
                 const mp = new (window as any).MercadoPago(publicKey, { locale: "pt-BR" })
+
+                if (!isMounted.current) return
 
                 // Inicializar campos do cartão com estilos do tema
                 const style = {
@@ -290,7 +295,7 @@ export default function MPCardContainer({
                     // Salvar referência globalmente para o cleanup
                     ; (window as any).__mpSubmitCallback = createCardToken
                     ; (window as any).__mpFormElement = formElement
-                formElement.addEventListener('submit', createCardToken)
+                if (formElement) formElement.addEventListener('submit', createCardToken)
 
             } catch (error) {
                 console.error("SDK Load Error:", error)
