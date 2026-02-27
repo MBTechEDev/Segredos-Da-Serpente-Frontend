@@ -167,14 +167,23 @@ export default function MPCardContainer({
                     try {
                         const amountElement = document.getElementById('transactionAmount') as HTMLInputElement
 
+                        console.log("Fetching installments for amount:", amountElement.value, "bin:", bin)
+
                         const installments = await getInstallments({
                             amount: amountElement.value,
                             bin,
                             paymentTypeId: 'credit_card'
                         })
-                        if (!installments || installments.length === 0) return
+                        console.log("Installments response:", installments)
+
+                        if (!installments || installments.length === 0) {
+                            console.warn("No installments returned from Mercado Pago")
+                            return
+                        }
 
                         const installmentOptions = installments[0].payer_costs
+                        console.log("Installments payer_costs:", installmentOptions)
+
                         const installmentOptionsKeys = { label: 'recommended_message', value: 'installments' }
 
                         createSelectOptions(installmentsElement, installmentOptions, installmentOptionsKeys)
@@ -411,7 +420,7 @@ export default function MPCardContainer({
             {/* Campos ocultos necessários para o Mercado Pago */}
             <input id="token" name="token" type="hidden" />
             <input id="paymentMethodId" name="paymentMethodId" type="hidden" />
-            <input id="transactionAmount" name="transactionAmount" type="hidden" value={cart?.total ? (cart.total / 100).toString() : ""} />
+            <input id="transactionAmount" name="transactionAmount" type="hidden" value={cart?.total ? cart.total.toString() : ""} />
             <input id="description" name="description" type="hidden" value="Compra - Segredos da Serpente" />
 
             <button
