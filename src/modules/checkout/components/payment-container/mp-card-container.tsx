@@ -3,6 +3,35 @@
 import { useEffect, useRef } from "react"
 import { initiatePaymentSession } from "@lib/data/cart"
 import { initMercadoPago, getIdentificationTypes, getPaymentMethods, getIssuers, getInstallments } from "@mercadopago/sdk-react"
+import Input from "@modules/common/components/input"
+import NativeSelect from "@modules/common/components/native-select"
+import { cn } from "@lib/utils"
+
+const SecureField = ({ id, label }: { id: string; label: string }) => {
+    return (
+        <div className="flex flex-col w-full group">
+            <div className="flex relative z-0 w-full txt-compact-medium">
+                <div
+                    id={id}
+                    className={cn(
+                        "block w-full h-14 px-4 pt-5 pb-1 mt-0 bg-background border rounded-md transition-all duration-200",
+                        "border-border focus-within:outline-none focus-within:ring-1 focus-within:ring-secondary/50 focus-within:border-secondary hover:bg-ui-bg-field-hover",
+                        "[&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-none [&>iframe]:outline-none [&>iframe]:bg-transparent"
+                    )}
+                ></div>
+                <label
+                    htmlFor={id}
+                    className={cn(
+                        "absolute left-4 top-1 px-1 transition-all duration-300 z-10 origin-0 text-[10px] text-ui-fg-subtle cursor-text pointer-events-none",
+                        "group-focus-within:text-secondary"
+                    )}
+                >
+                    {label}
+                </label>
+            </div>
+        </div>
+    )
+}
 
 type MPCardContainerProps = {
     cart: any
@@ -330,6 +359,7 @@ export default function MPCardContainer({
             const opt = document.createElement('option')
             opt.value = optValue
             opt.textContent = optLabel
+            opt.className = "bg-background text-foreground"
 
             tempOptions.appendChild(opt)
         })
@@ -347,6 +377,7 @@ export default function MPCardContainer({
         optionElement.textContent = placeholder
         optionElement.setAttribute('selected', "")
         optionElement.setAttribute('disabled', "")
+        optionElement.className = "bg-background text-foreground"
 
         element.appendChild(optionElement)
     }
@@ -367,60 +398,38 @@ export default function MPCardContainer({
     const labelClasses = "block text-sm font-medium text-[#ebe7d9] mb-1.5"
 
     return (
-        <form id="form-checkout" action="/process_payment" method="POST" className="w-full flex flex-col gap-5 max-w-[600px] font-body bg-transparent">
-            <div>
-                <label htmlFor="form-checkout__cardNumber" className={labelClasses}>Número do Cartão</label>
-                <div id="form-checkout__cardNumber" className={containerClasses}></div>
-            </div>
+        <form id="form-checkout" action="/process_payment" method="POST" className="w-full flex flex-col gap-5 font-body bg-transparent">
+            <SecureField id="form-checkout__cardNumber" label="Número do Cartão" />
 
             <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label htmlFor="form-checkout__expirationDate" className={labelClasses}>Data de Validade</label>
-                    <div id="form-checkout__expirationDate" className={containerClasses}></div>
-                </div>
-                <div>
-                    <label htmlFor="form-checkout__securityCode" className={labelClasses}>Cód. Segurança</label>
-                    <div id="form-checkout__securityCode" className={containerClasses}></div>
-                </div>
+                <SecureField id="form-checkout__expirationDate" label="Data de Validade" />
+                <SecureField id="form-checkout__securityCode" label="Cód. Segurança" />
+            </div>
+
+            <Input name="form-checkout__cardholderName" label="Titular do Cartão" required />
+
+            <div>
+                <NativeSelect id="form-checkout__issuer" name="issuer" defaultValue="" placeholder="Banco Emissor" required>
+                    <option value="" disabled className="bg-background text-foreground">Selecione o banco emissor</option>
+                </NativeSelect>
             </div>
 
             <div>
-                <label htmlFor="form-checkout__cardholderName" className={labelClasses}>Titular do Cartão</label>
-                <input type="text" id="form-checkout__cardholderName" name="cardholderName" className={inputClasses} placeholder="Nome como está no cartão" required />
-            </div>
-
-            <div>
-                <label htmlFor="form-checkout__issuer" className={labelClasses}>Banco Emissor</label>
-                <select id="form-checkout__issuer" name="issuer" className={inputClasses} defaultValue="" required>
-                    <option value="" disabled>Selecione o banco emissor</option>
-                </select>
-            </div>
-
-            <div>
-                <label htmlFor="form-checkout__installments" className={labelClasses}>Parcelas</label>
-                <select id="form-checkout__installments" name="installments" className={inputClasses} defaultValue="" required>
-                    <option value="" disabled>Selecione a quantidade de parcelas</option>
-                </select>
+                <NativeSelect id="form-checkout__installments" name="installments" defaultValue="" placeholder="Parcelas" required>
+                    <option value="" disabled className="bg-background text-foreground">Selecione a quantidade de parcelas</option>
+                </NativeSelect>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="form-checkout__identificationType" className={labelClasses}>Tipo de Documento</label>
-                    <select id="form-checkout__identificationType" name="identificationType" className={inputClasses} defaultValue="" required>
-                        <option value="" disabled>Tipo</option>
-                    </select>
+                    <NativeSelect id="form-checkout__identificationType" name="identificationType" defaultValue="" placeholder="Tipo Documento" required>
+                        <option value="" disabled className="bg-background text-foreground">Tipo</option>
+                    </NativeSelect>
                 </div>
-                <div>
-                    <label htmlFor="form-checkout__identificationNumber" className={labelClasses}>Número do Documento</label>
-                    <input type="text" id="form-checkout__identificationNumber" name="identificationNumber" className={inputClasses} placeholder="Número do documento" required />
-                </div>
+                <Input name="form-checkout__identificationNumber" label="Número do Documento" required />
             </div>
 
-            <div>
-                <label htmlFor="form-checkout__email" className={labelClasses}>E-mail</label>
-                <input type="email" id="form-checkout__email" name="email" className={inputClasses} placeholder="E-mail"
-                    defaultValue={cart?.email || ""} required />
-            </div>
+            <Input type="email" name="form-checkout__email" label="E-mail" defaultValue={cart?.email || ""} required />
 
             {/* Campos ocultos necessários para o Mercado Pago */}
             <input id="token" name="token" type="hidden" />

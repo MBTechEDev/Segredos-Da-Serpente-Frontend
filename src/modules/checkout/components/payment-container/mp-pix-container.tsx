@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react"
 import { initiatePaymentSession } from "@lib/data/cart"
 import { initMercadoPago, getIdentificationTypes } from "@mercadopago/sdk-react"
+import Input from "@modules/common/components/input"
+import NativeSelect from "@modules/common/components/native-select"
 
 type MPPixContainerProps = {
     cart: any
@@ -185,6 +187,7 @@ export default function MPPixContainer({
             const opt = document.createElement('option')
             opt.value = optValue
             opt.textContent = optLabel
+            opt.className = "bg-background text-foreground"
 
             tempOptions.appendChild(opt)
         })
@@ -196,35 +199,20 @@ export default function MPPixContainer({
     const labelClasses = "block text-sm font-medium text-[#ebe7d9] mb-1.5"
 
     return (
-        <form id="form-checkout-pix" action="/process_payment" method="POST" className="w-full flex flex-col gap-5 max-w-[600px] font-body bg-transparent">
+        <form id="form-checkout-pix" action="/process_payment" method="POST" className="w-full flex flex-col gap-5 font-body bg-transparent">
+
+            <div className="grid grid-cols-2 gap-4">
+                <Input name="form-checkout-pix__payerFirstName" label="Nome" required />
+                <Input name="form-checkout-pix__payerLastName" label="Sobrenome" required />
+            </div>
+
+            <Input type="email" name="form-checkout-pix__email" label="E-mail" defaultValue={cart?.email || ""} required />
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="form-checkout-pix__payerFirstName" className={labelClasses}>Nome</label>
-                    <input type="text" id="form-checkout-pix__payerFirstName" name="payerFirstName" className={inputClasses} required />
+                    <NativeSelect id="form-checkout-pix__identificationType" name="identificationType" defaultValue="" required placeholder="Tipo Documento" />
                 </div>
-                <div>
-                    <label htmlFor="form-checkout-pix__payerLastName" className={labelClasses}>Sobrenome</label>
-                    <input type="text" id="form-checkout-pix__payerLastName" name="payerLastName" className={inputClasses} required />
-                </div>
-            </div>
-
-            <div>
-                <label htmlFor="form-checkout-pix__email" className={labelClasses}>E-mail</label>
-                <input type="email" id="form-checkout-pix__email" name="email" className={inputClasses} required defaultValue={cart?.email || ""} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label htmlFor="form-checkout-pix__identificationType" className={labelClasses}>Tipo de doc.</label>
-                    <select id="form-checkout-pix__identificationType" name="identificationType" className={inputClasses} defaultValue="" required>
-                        <option value="" disabled>Carregando...</option>
-                    </select>
-                </div>
-                <div>
-                    <label htmlFor="form-checkout-pix__identificationNumber" className={labelClasses}>Número do doc.</label>
-                    <input type="text" id="form-checkout-pix__identificationNumber" name="identificationNumber" className={inputClasses} required />
-                </div>
+                <Input name="form-checkout-pix__identificationNumber" label="Número do doc." required />
             </div>
 
             <div className="pt-2">
