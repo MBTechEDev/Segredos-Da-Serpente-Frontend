@@ -95,6 +95,15 @@ export default function MPCardContainer({
                     }, 100)
                 })
 
+                // Injeta script de security para geração do device_id
+                if (!document.querySelector('script[src="https://www.mercadopago.com/v2/security.js"]')) {
+                    const securityScript = document.createElement('script')
+                    securityScript.src = "https://www.mercadopago.com/v2/security.js"
+                    securityScript.setAttribute('view', 'checkout')
+                    securityScript.async = true
+                    document.body.appendChild(securityScript)
+                }
+
                 const mp = new (window as any).MercadoPago(publicKey, { locale: "pt-BR" })
 
                 if (!isMounted.current) return
