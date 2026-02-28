@@ -14,6 +14,9 @@ export const metadata: Metadata = {
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" data-mode="dark" className="dark">
+      <head>
+        <script src="https://sdk.mercadopago.com/js/v2"></script>
+      </head>
       <body className="bg-background text-foreground antialiased selection:bg-secondary selection:text-secondary-foreground">
         <CartProvider>
           <main className="relative flex flex-col min-h-screen">
