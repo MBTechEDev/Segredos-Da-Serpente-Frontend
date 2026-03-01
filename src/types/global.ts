@@ -22,3 +22,10 @@ export type StoreFreeShippingPrice = StorePrice & {
   target_remaining: number
   remaining_percentage: number
 }
+
+
+declare global {
+  interface Window {
+    MercadoPago: any;
+  }
+}
