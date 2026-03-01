@@ -219,13 +219,23 @@ export default function MPCardContainer({
 
                 const updateIssuer = async (paymentMethod: any, bin: string) => {
                     const { additional_info_needed, issuer } = paymentMethod
-                    let issuerOptions = [issuer]
+                    let issuerOptions = issuer ? [issuer] : []
 
-                    if (additional_info_needed.includes('issuer_id')) {
-                        issuerOptions = await fetchIssuers(paymentMethod, bin) || []
+                    if (additional_info_needed?.includes('issuer_id') || issuerOptions.length === 0 || !issuerOptions[0]) {
+                        const fetchedIssuers = await fetchIssuers(paymentMethod, bin)
+                        if (fetchedIssuers && fetchedIssuers.length > 0) {
+                            issuerOptions = fetchedIssuers
+                        }
                     }
 
+                    // Se por algum acaso ainda não tiver opções, usa um fallback vazio
+                    issuerOptions = issuerOptions.filter(Boolean)
+
                     createSelectOptions(issuerElement, issuerOptions)
+
+                    if (issuerOptions.length > 0 && issuerOptions[0]?.id) {
+                        issuerElement.value = String(issuerOptions[0].id)
+                    }
                 }
 
                 const updateInstallments = async (paymentMethod: any, bin: string) => {
@@ -384,11 +394,12 @@ export default function MPCardContainer({
         const tempOptions = document.createDocumentFragment()
 
         options.forEach(option => {
+            if (!option) return;
             const optValue = option[value]
             const optLabel = option[label]
 
             const opt = document.createElement('option')
-            opt.value = optValue
+            opt.value = String(optValue)
             opt.textContent = optLabel
             opt.className = "bg-background text-foreground"
 

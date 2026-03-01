@@ -29,6 +29,24 @@ export const retrieveOrder = async (id: string) => {
     .catch((err) => medusaError(err))
 }
 
+export const checkOrderPaymentStatus = async (id: string) => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  return sdk.client
+    .fetch<HttpTypes.StoreOrderResponse>(`/store/orders/${id}`, {
+      method: "GET",
+      query: {
+        fields: "payment_status,*payment_collections.payments",
+      },
+      headers,
+      cache: "no-store",
+    })
+    .then(({ order }) => order)
+    .catch((err) => null)
+}
+
 export const listOrders = async (
   limit: number = 10,
   offset: number = 0,
