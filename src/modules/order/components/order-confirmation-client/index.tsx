@@ -23,7 +23,6 @@ import { Progress } from "@components/ui/progress"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { convertToLocale } from "@lib/util/money"
-import { checkOrderPaymentStatus } from "@lib/data/orders"
 
 type OrderConfirmationClientProps = {
     order: HttpTypes.StoreOrder
@@ -70,28 +69,6 @@ const OrderConfirmationClient = ({ order }: OrderConfirmationClientProps) => {
         return () => clearTimeout(timer)
     }, [])
 
-    const [isPaid, setIsPaid] = useState(
-        order.payment_status === "authorized" || order.payment_status === "captured"
-    )
-
-    // Polling do PIX
-    useEffect(() => {
-        if (!isPix || isPaid) return
-
-        const checkStatus = async () => {
-            const updatedOrder = await checkOrderPaymentStatus(orderId.toString())
-            if (updatedOrder && (updatedOrder.payment_status === "authorized" || updatedOrder.payment_status === "captured")) {
-                setIsPaid(true)
-                setShowConfetti(true) // Confetti extra ao confirmar
-                setTimeout(() => setShowConfetti(false), 3000)
-            }
-        }
-
-        const interval = setInterval(checkStatus, 5000)
-
-        return () => clearInterval(interval)
-    }, [isPix, isPaid, orderId])
-
     const copyOrderId = () => {
         navigator.clipboard.writeText(orderId.toString())
     }
@@ -136,10 +113,10 @@ const OrderConfirmationClient = ({ order }: OrderConfirmationClientProps) => {
                             <CheckCircle2 className="h-10 w-10 text-green-500" />
                         </div>
                         <h1 className="font-display text-3xl md:text-4xl text-gradient-gold mb-2">
-                            {isPix && !isPaid ? "Pedido Reservado!" : "Pedido Confirmado!"}
+                            {isPix ? "Pedido Reservado!" : "Pedido Confirmado!"}
                         </h1>
                         <p className="text-muted-foreground">
-                            {isPix && !isPaid
+                            {isPix
                                 ? "Obrigada por comprar conosco. Aguardando a aprovação do PIX para liberar o envio."
                                 : "Obrigada por comprar conosco. Seu pedido foi processado com sucesso."}
                         </p>
@@ -176,7 +153,7 @@ const OrderConfirmationClient = ({ order }: OrderConfirmationClientProps) => {
                         <div className="mb-8">
                             <div className="flex items-center justify-between mb-2">
                                 {[
-                                    { icon: CheckCircle2, label: (isPix && !isPaid) ? "Reservado" : "Confirmado", active: true, done: true },
+                                    { icon: CheckCircle2, label: isPix ? "Reservado" : "Confirmado", active: true, done: true },
                                     { icon: Package, label: "Preparando", active: false, done: false },
                                     { icon: Truck, label: "Enviado", active: false, done: false },
                                     { icon: MapPin, label: "Entregue", active: false, done: false },
@@ -207,7 +184,7 @@ const OrderConfirmationClient = ({ order }: OrderConfirmationClientProps) => {
                         </div>
 
                         {/* PIX Payment Panel */}
-                        {isPix && !isPaid && pixData && pixData.qr_code_base64 && (
+                        {isPix && pixData && pixData.qr_code_base64 && (
                             <div className="mb-8 p-6 bg-secondary/10 border border-secondary/30 rounded-xl flex flex-col items-center animate-in fade-in duration-500 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
                                 <h3 className="text-secondary font-display uppercase tracking-widest text-lg mb-4 text-center">
                                     Pague agora via PIX
