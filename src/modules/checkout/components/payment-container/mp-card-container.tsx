@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { initiatePaymentSession } from "@lib/data/cart"
 import { initMercadoPago, getIdentificationTypes, getPaymentMethods, getIssuers, getInstallments } from "@mercadopago/sdk-react"
+import { loadMercadoPago } from "@mercadopago/sdk-js"
 import Input from "@modules/common/components/input"
 import NativeSelect from "@modules/common/components/native-select"
 import { cn } from "@lib/utils"
@@ -48,6 +49,27 @@ export default function MPCardContainer({
     setCardBrand,
     onSuccess
 }: MPCardContainerProps) {
+
+    const [isReady, setIsReady] = useState(false);
+
+    useEffect(() => {
+        // Criamos uma função assíncrona dentro do useEffect
+        const inicializarMercadoPago = async () => {
+            // 1. Carrega o script
+            await loadMercadoPago();
+
+            // 2. Inicializa a instância (Substitua pela sua Public Key real)
+            const mp = new window.MercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY, {
+                locale: 'pt-BR'
+            });
+
+            // A partir daqui, a variável "mp" está pronta para gerar o formulário
+            setIsReady(true);
+            console.log("Mercado Pago carregado!", mp);
+        };
+
+        inicializarMercadoPago();
+    }, []);
     const isMounted = useRef(false)
 
     useEffect(() => {

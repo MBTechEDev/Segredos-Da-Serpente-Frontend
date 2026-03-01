@@ -1,7 +1,6 @@
 import { Metadata } from "next"
 import "styles/globals.css"
 import { CartProvider } from "@lib/context/CartContext"
-import Nav from "@modules/layout/templates/nav"
 import { Toaster } from "sonner"
 // import Footer from "@/modules/layout/templates/footer" // Descomenta quando criarmos o footer
 
@@ -12,6 +11,8 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout(props: { children: React.ReactNode }) {
+
+
   return (
     <html lang="pt-BR" data-mode="dark" className="dark">
       <body className="bg-background text-foreground antialiased selection:bg-secondary selection:text-secondary-foreground">
@@ -22,7 +23,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
               {props.children}
             </div>
           </main>
-          <Toaster position="top-right" richColors />
+          <Toaster position="bottom-left" richColors />
         </CartProvider>
       </body>
     </html>
