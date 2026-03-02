@@ -11,8 +11,9 @@
     "medusa-storefront"
   ],
   "scripts": {
+    "install": "node .yarn/releases/yarn-4.12.0.cjs install",
+    "build": "node .yarn/releases/yarn-4.12.0.cjs build",
     "dev": "next dev --turbopack -p 8000",
-    "build": "next build",
     "start": "next start -p 8000",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build"
