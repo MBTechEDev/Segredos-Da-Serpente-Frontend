@@ -2,11 +2,9 @@
 
 import React, { useState } from "react"
 import { Button } from "@components/ui/button"
-import { toast } from "sonner"
 import { Loader2, Send } from "lucide-react"
-// Importamos a função de reset (ajuste o caminho conforme sua lib)
-// Se não tiver, podemos usar o fetch direto para o endpoint de auth
-import { sdk } from "@lib/config"
+import { toast } from "sonner"
+import { resetPasswordRequest } from "@lib/data/customer"
 
 const ProfilePassword = ({ email }: { email?: string }) => {
   const [isSending, setIsSending] = useState(false)
@@ -16,16 +14,10 @@ const ProfilePassword = ({ email }: { email?: string }) => {
 
     setIsSending(true)
     try {
-      // No Medusa v2, solicitamos o reset via auth provider
-      await sdk.client.fetch(`/store/auth/emailpass/reset-password/token`, {
-        method: "POST",
-        body: { email }
-      })
-
+      await resetPasswordRequest(email)
       toast.success("Um corvo foi enviado ao seu e-mail com as instruções para a nova chave!")
-    } catch (error) {
-      // Mesmo se falhar, por segurança, avisamos que se o e-mail existir, receberá o link
-      toast.info("Se o seu e-mail estiver em nossos registros, você receberá um link de redefinição.")
+    } catch (error: any) {
+      toast.error(error.toString())
     } finally {
       setIsSending(false)
     }

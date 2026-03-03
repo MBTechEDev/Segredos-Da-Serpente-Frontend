@@ -117,6 +117,9 @@ export async function login(_currentState: unknown, formData: FormData) {
         revalidateTag(customerCacheTag)
       })
   } catch (error: any) {
+    if (error.toString() === "Error: Invalid email or password") {
+      return "Email ou senha inválidos"
+    }
     return error.toString()
   }
 
@@ -258,4 +261,54 @@ export const updateCustomerAddress = async (
     .catch((err) => {
       return { success: false, error: err.toString() }
     })
+}
+
+
+export const resetPasswordRequest = async (email: string) => {
+
+  try {
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
+
+    await sdk.auth.resetPassword(
+      "customer",
+      "emailpass",
+      {
+        identifier: email,
+        metadata: headers
+      }
+    )
+    return true
+  }
+  catch (error: any) {
+    return error.toString()
+  }
+
+}
+
+export const resetPassword = async (_currentState: unknown, formData: FormData) => {
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
+  const token = formData.get("token") as string
+
+  // Agora sempre retornamos o mesmo formato de objeto
+  if (!token) {
+    return { success: false, error: "Token de segurança ausente." }
+  }
+
+  try {
+    await sdk.auth.updateProvider(
+      "customer",
+      "emailpass",
+      {
+        email,
+        password
+      },
+      token
+    )
+    return { success: true, error: null }
+  } catch (err: any) {
+    return { success: false, error: err.toString() }
+  }
 }
