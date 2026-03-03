@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": ">=20.18.0"
+  },
   "name": "medusa-next",
   "version": "1.0.3",
   "private": true,
@@ -8,7 +11,7 @@
     "medusa-storefront"
   ],
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
