@@ -23,6 +23,8 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  */
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
 
   // React 19: useActionState para gerenciar o retorno da Server Action do Medusa
   const [errorMessage, formAction] = useActionState(login, null)
@@ -56,6 +58,8 @@ const Login = () => {
               className="pl-10 bg-background/40 border-white/10 focus:border-secondary/40 transition-all font-body"
               required
               autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
         </div>
@@ -86,6 +90,8 @@ const Login = () => {
               className="pl-10 pr-10 bg-background/40 border-white/10 focus:border-secondary/40 font-body"
               required
               autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <button
               type="button"
