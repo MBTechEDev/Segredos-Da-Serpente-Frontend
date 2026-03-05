@@ -267,6 +267,21 @@ const AddressBook: React.FC<AddressBookProps> = ({ customer, region }) => {
 
             <input type="hidden" name="country_code" value={region.countries?.[0].iso_2 || "br"} />
 
+            <div className="flex flex-col gap-y-3 mt-2 border border-emerald-900/10 bg-black/20 p-3 rounded-lg">
+              <div className="flex items-center gap-x-2">
+                <input type="checkbox" id="is_default_billing" name="is_default_billing" className="accent-emerald-600 w-4 h-4 rounded border-emerald-900/30" defaultChecked={editingAddress?.is_default_billing || addresses.length === 0} />
+                <Label htmlFor="is_default_billing" className="text-emerald-500/80 font-body text-xs cursor-pointer">
+                  Definir como morada principal
+                </Label>
+              </div>
+              <div className="flex items-center gap-x-2">
+                <input type="checkbox" id="is_default_shipping" name="is_default_shipping" className="accent-emerald-600 w-4 h-4 rounded border-emerald-900/30" defaultChecked={editingAddress?.is_default_shipping || addresses.length === 0} />
+                <Label htmlFor="is_default_shipping" className="text-emerald-500/80 font-body text-xs cursor-pointer">
+                  Definir como destino místico (entrega principal)
+                </Label>
+              </div>
+            </div>
+
             <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-emerald-900/20">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
               <Button type="submit" className="bg-emerald-600 hover:bg-emerald-500 px-8" disabled={isSubmitting || isLoadingCep}>

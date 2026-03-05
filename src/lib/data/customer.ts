@@ -97,9 +97,14 @@ export async function signup(_currentState: unknown, formData: FormData) {
     revalidateTag(customerCacheTag)
 
     await transferCart()
-
     return createdCustomer
   } catch (error: any) {
+    if (error.toString() === "Error: Identity with email already exists") {
+      return "Email já cadastrado"
+    }
+    else if (error.toString() === "Error: Customer with this email already has an account") {
+      return "Email já cadastrado"
+    }
     return error.toString()
   }
 }
@@ -165,8 +170,8 @@ export const addCustomerAddress = async (
   currentState: Record<string, unknown>,
   formData: FormData
 ): Promise<any> => {
-  const isDefaultBilling = (currentState.isDefaultBilling as boolean) || false
-  const isDefaultShipping = (currentState.isDefaultShipping as boolean) || false
+  const isDefaultBilling = formData.get("is_default_billing") === "on" || (currentState.isDefaultBilling as boolean) || false
+  const isDefaultShipping = formData.get("is_default_shipping") === "on" || (currentState.isDefaultShipping as boolean) || false
 
   const address = {
     first_name: formData.get("first_name") as string,
@@ -246,6 +251,13 @@ export const updateCustomerAddress = async (
   if (phone) {
     address.phone = phone
   }
+
+  // Extract and apply default checkbox states explicitly
+  const isDefaultBilling = formData.get("is_default_billing") === "on"
+  const isDefaultShipping = formData.get("is_default_shipping") === "on"
+
+  if (isDefaultBilling) address.is_default_billing = true
+  if (isDefaultShipping) address.is_default_shipping = true
 
   const headers = {
     ...(await getAuthHeaders()),
