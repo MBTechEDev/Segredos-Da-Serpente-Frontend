@@ -13,41 +13,47 @@ type ItemProps = {
 
 const Item = ({ item, currencyCode }: ItemProps) => {
   return (
-    <Table.Row className="w-full" data-testid="product-row">
-      <Table.Cell className="!pl-0 p-4 w-24">
+    <Table.Row className="w-full hover:bg-black/20 transition-colors border-b border-[#D4AF37]/10 last:border-0" data-testid="product-row">
+      <Table.Cell className="p-4 w-24">
         <div className="flex w-16">
           <Thumbnail thumbnail={item.thumbnail} size="square" />
         </div>
       </Table.Cell>
 
-      <Table.Cell className="text-left">
+      <Table.Cell className="text-left font-body p-4">
         <Text
-          className="txt-medium-plus text-ui-fg-base"
+          className="text-base text-neutral-200 font-semibold"
           data-testid="product-name"
         >
           {item.product_title}
         </Text>
-        <LineItemOptions variant={item.variant} data-testid="product-variant" />
+        <div className="text-[#D4AF37]/80 text-sm mt-1">
+          <LineItemOptions variant={item.variant} data-testid="product-variant" />
+        </div>
       </Table.Cell>
 
-      <Table.Cell className="!pr-0">
-        <span className="!pr-0 flex flex-col items-end h-full justify-center">
+      <Table.Cell className="p-4 font-body">
+        <span className="flex flex-col items-end h-full justify-center">
           <span className="flex gap-x-1 ">
-            <Text className="text-ui-fg-muted">
+            <Text className="text-neutral-500">
               <span data-testid="product-quantity">{item.quantity}</span>x{" "}
             </Text>
-            <LineItemUnitPrice
+            <div className="text-neutral-400">
+              <LineItemUnitPrice
+                item={item}
+                style="tight"
+                currencyCode={currencyCode}
+              />
+            </div>
+          </span>
+
+          <div className="text-emerald-400 font-bold mt-1">
+            <LineItemPrice
               item={item}
               style="tight"
               currencyCode={currencyCode}
             />
-          </span>
-
-          <LineItemPrice
-            item={item}
-            style="tight"
-            currencyCode={currencyCode}
-          />
+          </div>
         </span>
       </Table.Cell>
     </Table.Row>

@@ -209,6 +209,20 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 defaultValue={address.phone || undefined}
                 data-testid="phone-input"
               />
+              <div className="flex flex-col gap-y-3 mt-4">
+                <div className="flex items-center gap-x-2">
+                  <input type="checkbox" id={`is_default_billing_${address.id}`} name="is_default_billing" className="accent-ui-fg-base w-4 h-4" defaultChecked={address.is_default_billing} />
+                  <label htmlFor={`is_default_billing_${address.id}`} className="text-base-regular text-ui-fg-base cursor-pointer">
+                    Set as default billing address
+                  </label>
+                </div>
+                <div className="flex items-center gap-x-2">
+                  <input type="checkbox" id={`is_default_shipping_${address.id}`} name="is_default_shipping" className="accent-ui-fg-base w-4 h-4" defaultChecked={address.is_default_shipping} />
+                  <label htmlFor={`is_default_shipping_${address.id}`} className="text-base-regular text-ui-fg-base cursor-pointer">
+                    Set as default shipping address
+                  </label>
+                </div>
+              </div>
             </div>
             {formState.error && (
               <div className="text-rose-500 text-small-regular py-2">

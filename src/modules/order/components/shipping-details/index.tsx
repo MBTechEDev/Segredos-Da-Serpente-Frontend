@@ -10,62 +10,63 @@ type ShippingDetailsProps = {
 
 const ShippingDetails = ({ order }: ShippingDetailsProps) => {
   return (
-    <div>
-      <Heading level="h2" className="flex flex-row text-3xl-regular my-6">
-        Delivery
+    <div className="py-6 border-b border-[#D4AF37]/20">
+      <Heading level="h2" className="font-cinzel text-2xl text-[#D4AF37] mb-6">
+        Jornada da Relíquia
       </Heading>
-      <div className="flex items-start gap-x-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div
-          className="flex flex-col w-1/3"
+          className="flex flex-col"
           data-testid="shipping-address-summary"
         >
-          <Text className="txt-medium-plus text-ui-fg-base mb-1">
-            Shipping Address
+          <Text className="font-cinzel text-lg text-emerald-500 mb-2">
+            Morada de Destino
           </Text>
-          <Text className="txt-medium text-ui-fg-subtle">
+          <Text className="font-body text-neutral-300">
             {order.shipping_address?.first_name}{" "}
             {order.shipping_address?.last_name}
           </Text>
-          <Text className="txt-medium text-ui-fg-subtle">
+          <Text className="font-body text-neutral-400">
             {order.shipping_address?.address_1}{" "}
             {order.shipping_address?.address_2}
           </Text>
-          <Text className="txt-medium text-ui-fg-subtle">
+          <Text className="font-body text-neutral-400">
             {order.shipping_address?.postal_code},{" "}
             {order.shipping_address?.city}
           </Text>
-          <Text className="txt-medium text-ui-fg-subtle">
+          <Text className="font-body text-neutral-400">
             {order.shipping_address?.country_code?.toUpperCase()}
           </Text>
         </div>
 
         <div
-          className="flex flex-col w-1/3 "
+          className="flex flex-col"
           data-testid="shipping-contact-summary"
         >
-          <Text className="txt-medium-plus text-ui-fg-base mb-1">Contact</Text>
-          <Text className="txt-medium text-ui-fg-subtle">
+          <Text className="font-cinzel text-lg text-emerald-500 mb-2">Conexão</Text>
+          <Text className="font-body text-neutral-400">
             {order.shipping_address?.phone}
           </Text>
-          <Text className="txt-medium text-ui-fg-subtle">{order.email}</Text>
+          <Text className="font-body text-neutral-400">{order.email}</Text>
         </div>
 
         <div
-          className="flex flex-col w-1/3"
+          className="flex flex-col"
           data-testid="shipping-method-summary"
         >
-          <Text className="txt-medium-plus text-ui-fg-base mb-1">Method</Text>
-          <Text className="txt-medium text-ui-fg-subtle">
+          <Text className="font-cinzel text-lg text-emerald-500 mb-2">Mensageiros</Text>
+          <Text className="font-body text-neutral-400">
             {(order as any).shipping_methods[0]?.name} (
-            {convertToLocale({
-              amount: order.shipping_methods?.[0].total ?? 0,
-              currency_code: order.currency_code,
-            })}
+            <span className="text-[#F1D06E]">
+              {convertToLocale({
+                amount: order.shipping_methods?.[0].total ?? 0,
+                currency_code: order.currency_code,
+              })}
+            </span>
             )
           </Text>
         </div>
       </div>
-      <Divider className="mt-8" />
     </div>
   )
 }
