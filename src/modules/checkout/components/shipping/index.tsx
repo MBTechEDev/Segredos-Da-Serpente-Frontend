@@ -20,13 +20,8 @@ const Shipping: React.FC<ShippingProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingPrices, setIsLoadingPrices] = useState(true)
-  const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, { amount: number, delivery_time?: string | number }>>({})
+  const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, { amount: number, delivery_time?: { min: string, max: string } | null }>>({})
   const [error, setError] = useState<string | null>(null)
-
-  // Fallback para o ID do método já selecionado no carrinho
-  const [shippingMethodId, setShippingMethodId] = useState<string | undefined>(
-    cart.shipping_methods?.at(-1)?.shipping_option_id ?? undefined
-  )
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -34,43 +29,70 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const isOpen = searchParams.get("step") === "delivery"
 
+  const shippingMethodId = useMemo(() => {
+    return cart.shipping_methods?.at(-1)?.shipping_option_id
+  }, [cart.shipping_methods])
+
+  const extractDeliveryTime = (opt: any) => {
+    if (!opt) return null
+    const data = opt.calculated_price || opt.data?.calculated_price || opt.metadata || opt
+    const raw = data.delivery_range || data.delivery_time
+
+    if (!raw) {
+      const min = data.delivery_time_min || data.min_delivery_time
+      const max = data.delivery_time_max || data.max_delivery_time
+      if (min !== undefined && min !== null) {
+        return { min: String(min), max: String(max ?? min) }
+      }
+      return null
+    }
+
+    if (typeof raw === "object" && raw !== null) {
+      return {
+        min: String(raw.min ?? ""),
+        max: String(raw.max ?? raw.min ?? "")
+      }
+    }
+
+    if (typeof raw === "string") {
+      const parts = raw.match(/\d+/g)
+      if (parts && parts.length >= 2) {
+        return { min: parts[0], max: parts[parts.length - 1] }
+      }
+      if (parts && parts.length === 1) {
+        return { min: parts[0], max: parts[0] }
+      }
+    }
+
+    return null
+  }
+
   const _shippingMethods = useMemo(() => {
     return availableShippingMethods || []
   }, [availableShippingMethods])
 
-  // Efeito para calcular preços de opções dinâmicas (Melhor Envio)
   useEffect(() => {
     const fetchPrices = async () => {
-      if (!_shippingMethods.length) return
-
-      setIsLoadingPrices(true)
+      if (!_shippingMethods.length) {
+        setIsLoadingPrices(false)
+        return
+      }
       const calculatedMethods = _shippingMethods.filter((sm) => sm.price_type === "calculated")
-
       if (calculatedMethods.length === 0) {
         setIsLoadingPrices(false)
         return
       }
 
-      const pricesMap: Record<string, { amount: number, delivery_time?: string | number }> = {}
+      setIsLoadingPrices(true)
+      const pricesMap: Record<string, any> = {}
 
-      // Executa as cotações em paralelo para não travar o UI
       const results = await Promise.allSettled(
         calculatedMethods.map(async (sm) => {
           const resOption = await calculatePriceForShippingOption(sm.id, cart.id)
-
-          // Função para procurar chaves comuns de prazo de entrega nos plugins (Melhor Envio / Correios)
-          const extractDeliveryTime = (opt: any) => {
-            if (!opt) return null;
-            return opt.data?.delivery_time || opt.data?.custom_delivery_time || opt.data?.prazo || opt.metadata?.delivery_time || opt.metadata?.prazo_entrega || null;
-          }
-
-          const deliveryTime = extractDeliveryTime(resOption) || extractDeliveryTime(sm)
-
-          // SOLUÇÃO: Garantir que amount nunca seja nulo
           return {
             id: sm.id,
             amount: resOption?.amount ?? 0,
-            delivery_time: deliveryTime
+            delivery_time: extractDeliveryTime(resOption) || extractDeliveryTime(sm)
           }
         })
       )
@@ -97,20 +119,17 @@ const Shipping: React.FC<ShippingProps> = ({
   const handleSetShippingMethod = async (id: string) => {
     setError(null)
     setIsLoading(true)
-    const prevId = shippingMethodId
-    setShippingMethodId(id)
-
     try {
       await setShippingMethod({ cartId: cart.id, shippingMethodId: id })
     } catch (err: any) {
-      setShippingMethodId(prevId)
-      setError(err.message)
+      setError(err.message || "Erro ao selecionar método")
     } finally {
       setIsLoading(false)
     }
   }
 
-  const hasSelectedMethod = (cart.shipping_methods?.length ?? 0) > 0
+  const selectedMethod = cart.shipping_methods?.at(-1)
+  const hasSelectedMethod = !!selectedMethod
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 glass-dark animate-in fade-in duration-500">
@@ -122,7 +141,7 @@ const Shipping: React.FC<ShippingProps> = ({
           )}>
             {!isOpen && hasSelectedMethod ? <Check size={20} /> : <Truck size={20} />}
           </div>
-          <h2 className="font-display text-xl md:text-2xl text-ui-fg-base tracking-wide uppercase italic">
+          <h2 className="font-display text-xl md:text-2xl text-white tracking-wide uppercase italic">
             Método de Entrega
           </h2>
         </div>
@@ -143,41 +162,32 @@ const Shipping: React.FC<ShippingProps> = ({
           <div className="grid grid-cols-1 gap-4">
             {_shippingMethods
               .filter((option) => {
-                // Regra de Filtragem:
-                // 1. Flat Rate: Exibe sempre.
-                if (option.price_type === "flat") return true;
-
-                // 2. Calculado: Verifica no mapa de preços.
-                const priceObj = calculatedPricesMap[option.id];
-
-                // Se undefined (ainda carregando), mantém na lista para mostrar o spinner.
-                if (!priceObj) return true;
-
-                // Se tiver preço e for > 0, exibe. Se for 0 (erro do backend), esconde.
-                return priceObj.amount > 0;
+                if (option.price_type === "flat") return true
+                const priceObj = calculatedPricesMap[option.id]
+                if (!priceObj && isLoadingPrices) return true
+                return (priceObj?.amount ?? 0) > 0
               })
               .map((option) => {
                 const isSelected = option.id === shippingMethodId
 
-                // Define o valor: se for flat usa o fixo, se for calculado busca no map
                 const amount = option.price_type === "flat"
                   ? (option.amount as number)
                   : calculatedPricesMap[option.id]?.amount
 
                 const deliveryTime = option.price_type === "flat"
-                  ? null
-                  : calculatedPricesMap[option.id]?.delivery_time
+                  ? extractDeliveryTime(option)
+                  : (calculatedPricesMap[option.id]?.delivery_time || extractDeliveryTime(option))
 
                 return (
                   <div
                     key={option.id}
-                    onClick={() => !isLoadingPrices && handleSetShippingMethod(option.id)}
+                    onClick={() => !isLoadingPrices && !isLoading && handleSetShippingMethod(option.id)}
                     className={clx(
                       "relative flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all duration-300 bg-background/20",
                       isSelected
                         ? "border-secondary bg-secondary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]"
                         : "border-border/40 hover:border-secondary/50",
-                      isLoadingPrices && "opacity-50 cursor-not-allowed"
+                      (isLoadingPrices || isLoading) && "opacity-50 pointer-events-none"
                     )}
                   >
                     <div className="flex items-center gap-x-4">
@@ -187,17 +197,22 @@ const Shipping: React.FC<ShippingProps> = ({
                       )}>
                         {isSelected && <div className="w-2 h-2 rounded-full bg-background" />}
                       </div>
-                      <div className="flex flex-col">
-                        <span className="font-display text-sm tracking-wide text-ui-fg-base uppercase">
+
+                      {/* NOME E TEMPO NA MESMA LINHA */}
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-display text-sm tracking-wide text-white uppercase">
                           {option.name}
                         </span>
                         {deliveryTime && (
-                          <span className="text-xs text-ui-fg-muted font-body italic mt-0.5">
-                            {deliveryTime} dias úteis
+                          <span className="text-[11px] text-white/90 font-body italic">
+                            ({deliveryTime.min === deliveryTime.max
+                              ? `${deliveryTime.min} ${Number(deliveryTime.min) <= 1 ? 'dia útil' : 'dias úteis'}`
+                              : `${deliveryTime.min} a ${deliveryTime.max} dias úteis`})
                           </span>
                         )}
                       </div>
                     </div>
+
                     <span className="font-medium text-secondary font-body">
                       {amount !== undefined ? (
                         convertToLocale({ amount, currency_code: cart.currency_code })
@@ -216,17 +231,16 @@ const Shipping: React.FC<ShippingProps> = ({
               <Button
                 type="button"
                 variant="secondary"
-                className="w-1/3 h-12 bg-transparent border border-border/50 text-foreground/80 hover:bg-transparent hover:text-secondary hover:border-secondary/50 font-display uppercase tracking-widest font-semibold"
+                className="w-1/3 h-12 bg-transparent border border-border/50 text-white/80 hover:bg-transparent hover:text-secondary hover:border-secondary/50 font-display uppercase tracking-widest font-semibold"
                 onClick={() => router.push(pathname + "?step=address", { scroll: false })}
               >
                 Voltar
               </Button>
               <Button
-                className="w-2/3 bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] hover:brightness-110 text-black font-display font-bold tracking-[0.2em] uppercase text-[12px] h-12 rounded-md shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 active:scale-[0.98]"
+                className="w-2/3 bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] hover:brightness-110 text-black font-display font-bold tracking-[0.2em] uppercase text-[12px] h-12 rounded-md shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300"
                 onClick={handleSubmit}
                 isLoading={isLoading}
                 disabled={!hasSelectedMethod || isLoadingPrices}
-                variant="secondary"
               >
                 Continuar
               </Button>
@@ -237,19 +251,26 @@ const Shipping: React.FC<ShippingProps> = ({
         <div className="font-body">
           {hasSelectedMethod ? (
             <div className="flex items-center justify-between p-4 bg-background/40 rounded-md border border-border/30 animate-in slide-in-from-top-2">
-              <div className="flex items-center gap-4 text-sm text-ui-fg-base italic">
+              <div className="flex items-center gap-4 text-sm text-white italic">
                 <Truck size={20} className="text-secondary" />
-                <span>{cart.shipping_methods?.at(-1)?.name}</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-semibold uppercase font-display tracking-tight text-white">{selectedMethod.name}</span>
+                  {extractDeliveryTime(selectedMethod) && (
+                    <span className="text-[14px] text-white whitespace-nowrap">
+                      - {extractDeliveryTime(selectedMethod)?.max} dias úteis
+                    </span>
+                  )}
+                </div>
               </div>
               <p className="text-sm font-semibold text-secondary">
                 {convertToLocale({
-                  amount: cart.shipping_methods?.at(-1)?.amount ?? 0,
+                  amount: selectedMethod.amount ?? 0,
                   currency_code: cart.currency_code,
                 })}
               </p>
             </div>
           ) : (
-            <p className="text-ui-fg-muted italic text-sm">Selecione um endereço para calcular o frete.</p>
+            <p className="text-white/60 italic text-sm">Selecione um endereço para calcular o frete.</p>
           )}
         </div>
       )}

@@ -105,7 +105,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
               <ScrollText className="text-[#D4AF37] w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-cinzel text-xl text-neutral-200">Pactos Forjados</h3>
+              <h3 className="font-cinzel text-xl text-neutral-200">Rituais Forjados</h3>
               <p className="text-xs text-neutral-500 uppercase tracking-wider">Suas Oferendas Recentes</p>
             </div>
           </div>
