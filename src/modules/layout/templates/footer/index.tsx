@@ -111,13 +111,18 @@ export default async function Footer() {
           <div className="flex flex-col gap-y-2">
             <h4 className="font-display text-sm text-foreground uppercase tracking-widest mb-2">Ajuda</h4>
             <ul className="grid grid-cols-1 gap-2 text-sm text-muted-foreground">
-              {["Minha Conta", "Pedidos", "Trocas", "Privacidade"].map((link) => (
-                <li key={link}>
+              {[
+                { label: "Minha Conta", href: "/account" },
+                { label: "Pedidos", href: "/account/orders" },
+                { label: "Trocas", href: "/terms" },
+                { label: "Privacidade", href: "/privacy" },
+              ].map((link) => (
+                <li key={link.label}>
                   <LocalizedClientLink
-                    href={`/${link.toLowerCase().replace(/\s+/g, '-')}`}
+                    href={link.href}
                     className="hover:text-secondary transition-colors"
                   >
-                    {link}
+                    {link.label}
                   </LocalizedClientLink>
                 </li>
               ))}
@@ -134,10 +139,6 @@ export default async function Footer() {
                 <span className="break-all cursor-pointer hover:text-foreground transition-colors">
                   contato@segredosdaserpente.com
                 </span>
-              </li>
-              <li className="flex items-center gap-3 group">
-                <Phone className="h-4 w-4 text-primary shrink-0 group-hover:text-secondary transition-colors" />
-                <span className="hover:text-foreground transition-colors">(11) 99999-9999</span>
               </li>
             </ul>
           </div>

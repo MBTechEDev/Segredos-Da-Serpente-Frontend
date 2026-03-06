@@ -73,12 +73,14 @@ const Login = () => {
             >
               Senha
             </Label>
+            {/* 
             <LocalizedClientLink
               href="/account/forgot-password"
               className="text-[10px] uppercase tracking-wider text-secondary/60 hover:text-secondary transition-colors"
             >
               Esqueceu o segredo?
-            </LocalizedClientLink>
+            </LocalizedClientLink> 
+            */}
           </div>
           <div className="relative group">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-secondary transition-colors" />

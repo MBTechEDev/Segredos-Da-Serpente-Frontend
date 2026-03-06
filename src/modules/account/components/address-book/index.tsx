@@ -161,6 +161,9 @@ const AddressBook: React.FC<AddressBookProps> = ({ customer, region }) => {
                 <AlertDialogContent className="glass-dark border-emerald-900/40 text-white">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="font-display text-[#D4AF37]">Remover Morada?</AlertDialogTitle>
+                    <AlertDialogDescription className="sr-only">
+                      Esta ação removerá permanentemente o endereço do seu cofre de endereços.
+                    </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel className="bg-transparent border-emerald-900/20">Voltar</AlertDialogCancel>
