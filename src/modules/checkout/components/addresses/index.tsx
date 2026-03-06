@@ -100,12 +100,23 @@ const Addresses = ({
             )}
 
             <div className="flex flex-col gap-y-2 pt-4">
-              <Button
-                className="w-full cta-primary h-12 text-base uppercase tracking-widest font-display"
-                variant="secondary"
-              >
-                Continuar
-              </Button>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-1/3 h-12 bg-transparent border border-border/50 text-foreground/80 hover:bg-transparent hover:text-secondary hover:border-secondary/50 font-display uppercase tracking-widest font-semibold"
+                  onClick={() => router.push("/cart")}
+                >
+                  Voltar
+                </Button>
+                <Button
+                  type="submit"
+                  className="w-2/3 bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] hover:brightness-110 text-black font-display font-bold tracking-[0.2em] uppercase text-[12px] h-12 rounded-md shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 active:scale-[0.98]"
+                  variant="secondary"
+                >
+                  Continuar
+                </Button>
+              </div>
               <ErrorMessage error={message} />
             </div>
           </div>
@@ -154,7 +165,7 @@ const Addresses = ({
               <div className="pt-4 border-t border-border/10">
                 <Button
                   onClick={handleProceed}
-                  className="w-full md:w-auto min-w-[250px] cta-primary h-12 gap-2 font-display uppercase tracking-widest"
+                  className="w-full md:w-auto min-w-[250px] bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] hover:brightness-110 text-black font-display font-bold tracking-[0.2em] uppercase text-[12px] h-12 gap-2 rounded-md shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 active:scale-[0.98]"
                 >
                   Confirmar e Ir para Entrega
                   <ArrowRight size={18} />

@@ -9,6 +9,7 @@ import React, { useState, useEffect } from "react"
 import { retrieveCart } from "@lib/data/cart"
 import { Copy, CheckCircle2, Loader2 } from "lucide-react"
 import ErrorMessage from "../error-message"
+import { usePathname, useRouter } from "next/navigation"
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
@@ -80,6 +81,9 @@ const MercadoPagoPaymentButton = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null)
 
+  const router = useRouter()
+  const pathname = usePathname()
+
   const handlePayment = async () => {
     setSubmitting(true)
     setErrorMessage(null)
@@ -129,22 +133,32 @@ const MercadoPagoPaymentButton = ({
   }
 
   return (
-    <>
-      <Button
-        disabled={notReady}
-        className="w-full cta-primary h-12 text-base uppercase tracking-widest font-display"
-        size="large"
-        onClick={handlePayment}
-        isLoading={submitting}
-        data-testid={dataTestId}
-      >
-        FINALIZAR PEDIDO
-      </Button>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-4">
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-1/3 h-12 bg-transparent border border-border/50 text-foreground/80 hover:bg-transparent hover:text-secondary hover:border-secondary/50 font-display uppercase tracking-widest font-semibold"
+          onClick={() => router.push(pathname + "?step=delivery", { scroll: false })}
+        >
+          Voltar
+        </Button>
+        <Button
+          disabled={notReady}
+          className="w-2/3 bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] hover:brightness-110 text-black font-display font-bold tracking-[0.2em] uppercase text-[12px] h-12 rounded-md shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 active:scale-[0.98]"
+          size="large"
+          onClick={handlePayment}
+          isLoading={submitting}
+          data-testid={dataTestId}
+        >
+          FINALIZAR
+        </Button>
+      </div>
       <ErrorMessage
         error={errorMessage}
         data-testid="mp-payment-error-message"
       />
-    </>
+    </div>
   )
 }
 

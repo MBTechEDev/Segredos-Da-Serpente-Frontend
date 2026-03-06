@@ -1,7 +1,7 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import ProductPreview from "@modules/products/components/product-preview"
+import ProductCard from "@modules/products/components/product-card"
 import CategoryFilters from "./category-filters"
 import {
     Select,
@@ -20,12 +20,14 @@ interface CategoryFiltersAndProductsProps {
     category: HttpTypes.StoreProductCategory
     count: number
     availableTags: { label: string; count: number }[]
+    region: HttpTypes.StoreRegion
 }
 
 export default function CategoryFiltersAndProducts({
     initialProducts,
     count,
-    availableTags
+    availableTags,
+    region
 }: CategoryFiltersAndProductsProps) {
 
     return (
@@ -62,7 +64,7 @@ export default function CategoryFiltersAndProducts({
                     {initialProducts.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
                             {initialProducts.map((product) => (
-                                <ProductPreview key={product.id} product={product} />
+                                <ProductCard key={product.id} product={product} region={region} />
                             ))}
                         </div>
                     ) : (

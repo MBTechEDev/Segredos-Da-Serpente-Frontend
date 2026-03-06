@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
-import { Plus, Minus, Trash2, ShoppingBag, Truck, Loader2 } from "lucide-react"
+import { Plus, Minus, Trash2, ShoppingBag, Loader2 } from "lucide-react"
 
 import { Button } from "@components/ui/button"
 import {
@@ -30,24 +30,19 @@ const CartDrawer = ({ children }: { children: React.ReactNode }) => {
         totalItems,
         updateItem,
         removeItem,
+        isCartDrawerOpen,
+        setIsCartDrawerOpen,
     } = useCartContext()
 
-    const [isOpen, setIsOpen] = useState(false)
     const [updatingLineId, setUpdatingLineId] = useState<string | null>(null)
     const pathname = usePathname()
 
     // Regra de Ouro: Fechar ao navegar
     useEffect(() => {
-        setIsOpen(false)
+        setIsCartDrawerOpen(false)
     }, [pathname])
 
     const currencyCode = cart?.currency_code || "brl"
-
-    // Lógica de Frete Grátis (Mock de R$ 150,00)
-    const freeShippingThreshold = 150
-    const currentSubtotal = cart?.subtotal || 0
-    const remainingForFreeShipping = Math.max(0, freeShippingThreshold - currentSubtotal)
-    const progressPercentage = Math.min(100, (currentSubtotal / freeShippingThreshold) * 100)
 
     // Handlers com feedback de loading
     const handleUpdateQuantity = async (lineId: string, quantity: number) => {
@@ -63,7 +58,7 @@ const CartDrawer = ({ children }: { children: React.ReactNode }) => {
     }
 
     return (
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <Sheet open={isCartDrawerOpen} onOpenChange={setIsCartDrawerOpen}>
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="w-full sm:max-w-md bg-background border-l border-white/10 flex flex-col p-0 h-full shadow-2xl">
 
@@ -94,27 +89,6 @@ const CartDrawer = ({ children }: { children: React.ReactNode }) => {
                     </div>
                 ) : (
                     <>
-                        {/* Progress Bar de Frete */}
-                        <div className="px-6 py-4 bg-emerald/5 border-b border-emerald/10">
-                            <div className="flex justify-between text-xs mb-2">
-                                <span className={cn(
-                                    "flex items-center gap-1.5 transition-colors",
-                                    remainingForFreeShipping > 0 ? "text-muted-foreground" : "text-emerald-400"
-                                )}>
-                                    <Truck className="w-3.5 h-3.5" />
-                                    {remainingForFreeShipping > 0
-                                        ? `Faltam ${formatMoney(remainingForFreeShipping, currencyCode)} para frete grátis`
-                                        : "Bênção alcançada: Frete Grátis Liberado!"}
-                                </span>
-                                <span className="text-muted-foreground">{Math.round(progressPercentage)}%</span>
-                            </div>
-                            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-emerald-500 transition-all duration-700 shadow-[0_0_8px_#10b981]"
-                                    style={{ width: `${progressPercentage}%` }}
-                                />
-                            </div>
-                        </div>
 
                         {/* Lista de Itens */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -189,7 +163,7 @@ const CartDrawer = ({ children }: { children: React.ReactNode }) => {
                             </div>
                             <Button asChild className="w-full cta-primary shadow-[0_0_20px_rgba(16,185,129,0.2)] py-6 text-md">
                                 <LocalizedClientLink href="/checkout">
-                                    Finalizar Pacto
+                                    Finalizar Ritual
                                 </LocalizedClientLink>
                             </Button>
                         </div>

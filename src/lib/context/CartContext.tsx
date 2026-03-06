@@ -31,6 +31,8 @@ interface CartContextType {
     removeItem: (lineId: string) => Promise<void>
     applyDiscount: (code: string) => Promise<void>
     refreshCart: () => Promise<void>
+    isCartDrawerOpen: boolean
+    setIsCartDrawerOpen: (isOpen: boolean) => void
 }
 
 const CartContext = createContext<CartContextType | null>(null)
@@ -46,6 +48,7 @@ export const useCartContext = () => {
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     const [cart, setCart] = useState<HttpTypes.StoreCart | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false)
 
     const params = useParams()
     const countryCode = (params?.countryCode as string) || "br"
@@ -95,7 +98,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
             await fetchCart()
 
             // Abre o CartDrawer automaticamente para dar feedback visual
-            // (Isso depende de como você controla o estado de abertura no Nav)
+            setIsCartDrawerOpen(true)
 
             toast.success("Artefato adicionado ao ritual")
         } catch (error: any) {
@@ -162,6 +165,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
                 removeItem,
                 applyDiscount,
                 refreshCart,
+                isCartDrawerOpen,
+                setIsCartDrawerOpen,
             }}
         >
             {children}

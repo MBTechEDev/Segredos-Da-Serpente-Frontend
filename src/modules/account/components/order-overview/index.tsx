@@ -124,9 +124,8 @@ const OrderOverview = ({ orders }: OrderOverviewProps) => {
                   <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-2">
                     <p className="text-xl font-display text-secondary">
                       {convertToLocale({
-                        amount: order.total / 100, // Ajuste para decimais pois o Medusa v2 retorna centavos
+                        amount: order.total,
                         currency_code: order.currency_code,
-                        locale: "pt-BR"
                       })}
                     </p>
                     <Button variant="outline" size="sm" className="h-8 border-white/5 bg-white/5 hover:bg-white/10" asChild>

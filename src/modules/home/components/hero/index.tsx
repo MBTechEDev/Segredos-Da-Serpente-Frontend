@@ -72,10 +72,6 @@ const Hero = () => {
           {/* Trust Badges - Ajustado margem superior no mobile */}
           <div className="mt-10 md:mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-12 text-muted-foreground animate-in fade-in duration-1000 delay-700">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-              <span className="text-[10px] md:text-sm tracking-wide">Frete Grátis +R$150</span>
-            </div>
-            <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
               <span className="text-[10px] md:text-sm tracking-wide">Envio Discreto</span>
             </div>

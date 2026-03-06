@@ -140,7 +140,7 @@ const ShippingAddress = ({
             value={formData["shipping_address.postal_code"]}
             onChange={handleChange}
             required
-            maxLength={8}
+            maxLength={10}
           />
           {isLoadingCep && <Loader2 className="absolute right-3 top-9 h-4 w-4 animate-spin text-emerald-500" />}
         </div>

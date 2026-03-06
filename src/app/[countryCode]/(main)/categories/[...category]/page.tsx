@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react"
 
 import { getCategoryByHandle } from "@lib/data/categories"
 import { listProducts } from "@lib/data/products"
+import { getRegion } from "@lib/data/regions"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import {
   Breadcrumb,
@@ -38,6 +39,12 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const categoryObject = await getCategoryByHandle(category)
 
   if (!categoryObject) {
+    notFound()
+  }
+
+  const region = await getRegion(countryCode)
+
+  if (!region) {
     notFound()
   }
 
@@ -118,6 +125,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         category={categoryObject}
         count={response.count}
         availableTags={dynamicFilters}
+        region={region}
       />
     </div>
   )

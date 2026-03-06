@@ -21,7 +21,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
     <div className="flex flex-col justify-center gap-y-6">
       <div className="flex gap-2 justify-between items-center">
         <h1 className="font-cinzel text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#D4AF37] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">
-          Pacto #{order.display_id}
+          Ritual #{order.display_id}
         </h1>
         <LocalizedClientLink
           href="/account/orders"

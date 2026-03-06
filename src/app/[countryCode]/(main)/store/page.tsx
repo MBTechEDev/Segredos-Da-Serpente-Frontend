@@ -38,6 +38,7 @@ export default async function StorePage({ params, searchParams }: Props) {
       limit: 12,
       offset: sParams.offset ? parseInt(sParams.offset as string) : 0,
       order: sParams.order as string,
+      q: sParams.q ? String(sParams.q) : undefined,
       // O Medusa v2 aceita array de IDs para categorias
       category_id: Array.isArray(sParams.category_id)
         ? sParams.category_id
