@@ -34,8 +34,8 @@ export default async function Home(props: {
     <main className="relative min-h-screen bg-background">
       <Hero />
       <Categories />
-      <div className="py-12 md:py-16">
-        <ul className="flex flex-col gap-y-24">
+      <div className="py-8 md:py-12">
+        <ul className="flex flex-col gap-y-12 md:gap-y-16">
           <FeaturedProducts
             collections={collections}
             region={region}

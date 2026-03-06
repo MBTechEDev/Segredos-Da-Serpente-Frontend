@@ -51,7 +51,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
 
             {missingItems.length > 0 && (
               <div className="mt-4 p-3 rounded-lg bg-black/40 border border-[#D4AF37]/20 relative z-10">
-                <p className="text-xs text-neutral-400 mb-2">O pacto exige os seguintes fragmentos:</p>
+                <p className="text-xs text-neutral-400 mb-2">O ritual exige os seguintes fragmentos:</p>
                 <ul className="text-xs text-[#F1D06E] space-y-1 list-disc list-inside">
                   {missingItems.map((item, idx) => (
                     <li key={idx}>{item}</li>
@@ -122,7 +122,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                       <div className="p-4 md:p-5 rounded-xl bg-black/40 border border-white/5 group-hover/order:border-[#D4AF37]/30 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex flex-col gap-1.5">
                           <span className="font-cinzel text-[#F1D06E] text-base md:text-lg font-semibold tracking-wider">
-                            Pacto #{order.display_id}
+                            Ritual #{order.display_id}
                           </span>
                           <span className="text-xs text-neutral-500 font-inter">
                             Forjado em: {new Date(order.created_at).toLocaleDateString('pt-BR')}

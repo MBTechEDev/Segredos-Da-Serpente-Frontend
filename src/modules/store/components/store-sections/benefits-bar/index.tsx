@@ -3,19 +3,9 @@ import { cn } from "@lib/utils"
 
 const benefits = [
     {
-        icon: Truck,
-        title: "Frete Grátis",
-        description: "Acima de R$ 299",
-    },
-    {
         icon: Shield,
         title: "Compra Segura",
         description: "Dados protegidos",
-    },
-    {
-        icon: CreditCard,
-        title: "Até 12x",
-        description: "Sem juros no cartão",
     },
     {
         icon: Gift,

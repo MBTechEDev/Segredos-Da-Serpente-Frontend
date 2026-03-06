@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import { Menu, ShoppingBag, Search, User, ChevronDown } from "lucide-react"
 
@@ -21,7 +21,9 @@ type NavClientProps = {
 const NavClient = ({ regions, categories }: NavClientProps) => {
     const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [isScrolled, setIsScrolled] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("")
     const pathname = usePathname()
+    const router = useRouter()
     const { totalItems } = useCartContext()
 
     // Efeito de Scroll
@@ -32,6 +34,33 @@ const NavClient = ({ regions, categories }: NavClientProps) => {
         window.addEventListener("scroll", handleScroll)
         return () => window.removeEventListener("scroll", handleScroll)
     }, [])
+
+    const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        let query = searchQuery.trim()
+
+        if (query) {
+            // Tolerância a falhas: Reverte palavras no Plural para o Singular 
+            // O Medusa Database usa ILIKE '%termo%'. Assim '%vela%' acha 'Velas' e 'Vela' 
+            // Mas '%velas%' não acha 'Vela'.
+            const lowerQuery = query.toLowerCase()
+            if (lowerQuery.endsWith('s') && lowerQuery.length > 3) {
+                if (lowerQuery.endsWith('ais')) {
+                    query = lowerQuery.replace(/ais$/, 'al') // Cristais -> cristal
+                } else if (lowerQuery.endsWith('ões')) {
+                    query = lowerQuery.replace(/ões$/, 'ão') // Poções -> poção
+                } else if (lowerQuery.endsWith('es') && !lowerQuery.endsWith('ies')) {
+                    query = lowerQuery.replace(/es$/, '')    // Colares -> colar
+                } else {
+                    query = lowerQuery.replace(/s$/, '')     // Velas -> vela, amuletos -> amuleto
+                }
+            }
+
+            router.push(`/store?q=${encodeURIComponent(query)}`)
+            setIsSearchOpen(false)
+            setSearchQuery("")
+        }
+    }
 
     return (
         <header
@@ -172,15 +201,17 @@ const NavClient = ({ regions, categories }: NavClientProps) => {
                 {/* 5. Search Bar */}
                 {isSearchOpen && (
                     <div className="py-4 border-t border-white/10 animate-in slide-in-from-top-2">
-                        <div className="relative max-w-2xl mx-auto">
+                        <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary" />
                             <Input
                                 type="text"
                                 placeholder="O que sua alma procura hoje? (Ex: Velas, Cristais...)"
                                 className="w-full bg-card/50 border-white/10 rounded-full py-6 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-secondary/50 focus-visible:border-secondary/50"
                                 autoFocus
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                             />
-                        </div>
+                        </form>
                     </div>
                 )}
             </nav>

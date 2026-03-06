@@ -56,8 +56,10 @@ const AddressBook: React.FC<AddressBookProps> = ({ customer, region }) => {
   const addresses = customer.addresses || []
 
   const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "")
-    setCep(value)
+    const rawValue = e.target.value
+    setCep(rawValue)
+
+    const value = rawValue.replace(/\D/g, "")
 
     if (value.length === 8) {
       setIsLoadingCep(true)
@@ -200,7 +202,7 @@ const AddressBook: React.FC<AddressBookProps> = ({ customer, region }) => {
                 CEP {isLoadingCep && <Loader2 className="h-3 w-3 animate-spin" />}
               </Label>
               <div className="relative">
-                <Input id="postal_code" name="postal_code" value={cep} onChange={handleCepChange} required placeholder="00000000" maxLength={8} className="bg-black/40 border-emerald-900/30 h-9 pl-9 text-white" />
+                <Input id="postal_code" name="postal_code" value={cep} onChange={handleCepChange} required placeholder="00000000" maxLength={10} className="bg-black/40 border-emerald-900/30 h-9 pl-9 text-white" />
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-emerald-500/50" />
               </div>
             </div>

@@ -20,7 +20,7 @@ const Shipping: React.FC<ShippingProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingPrices, setIsLoadingPrices] = useState(true)
-  const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, number>>({})
+  const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, { amount: number, delivery_time?: string | number }>>({})
   const [error, setError] = useState<string | null>(null)
 
   // Fallback para o ID do método já selecionado no carrinho
@@ -51,24 +51,36 @@ const Shipping: React.FC<ShippingProps> = ({
         return
       }
 
-      const pricesMap: Record<string, number> = {}
+      const pricesMap: Record<string, { amount: number, delivery_time?: string | number }> = {}
 
       // Executa as cotações em paralelo para não travar o UI
       const results = await Promise.allSettled(
         calculatedMethods.map(async (sm) => {
-          const price = await calculatePriceForShippingOption(sm.id, cart.id)
+          const resOption = await calculatePriceForShippingOption(sm.id, cart.id)
 
-          // SOLUÇÃO: Garantir que o amount nunca seja null/undefined para o pricesMap
+          // Função para procurar chaves comuns de prazo de entrega nos plugins (Melhor Envio / Correios)
+          const extractDeliveryTime = (opt: any) => {
+            if (!opt) return null;
+            return opt.data?.delivery_time || opt.data?.custom_delivery_time || opt.data?.prazo || opt.metadata?.delivery_time || opt.metadata?.prazo_entrega || null;
+          }
+
+          const deliveryTime = extractDeliveryTime(resOption) || extractDeliveryTime(sm)
+
+          // SOLUÇÃO: Garantir que amount nunca seja nulo
           return {
             id: sm.id,
-            amount: price?.amount ?? 0 // Se price.amount for null, assume 0 
+            amount: resOption?.amount ?? 0,
+            delivery_time: deliveryTime
           }
         })
       )
 
       results.forEach((result) => {
         if (result.status === "fulfilled" && result.value) {
-          pricesMap[result.value.id] = result.value.amount
+          pricesMap[result.value.id] = {
+            amount: result.value.amount,
+            delivery_time: result.value.delivery_time
+          }
         }
       })
 
@@ -136,13 +148,13 @@ const Shipping: React.FC<ShippingProps> = ({
                 if (option.price_type === "flat") return true;
 
                 // 2. Calculado: Verifica no mapa de preços.
-                const price = calculatedPricesMap[option.id];
+                const priceObj = calculatedPricesMap[option.id];
 
                 // Se undefined (ainda carregando), mantém na lista para mostrar o spinner.
-                if (price === undefined) return true;
+                if (!priceObj) return true;
 
                 // Se tiver preço e for > 0, exibe. Se for 0 (erro do backend), esconde.
-                return price > 0;
+                return priceObj.amount > 0;
               })
               .map((option) => {
                 const isSelected = option.id === shippingMethodId
@@ -150,7 +162,11 @@ const Shipping: React.FC<ShippingProps> = ({
                 // Define o valor: se for flat usa o fixo, se for calculado busca no map
                 const amount = option.price_type === "flat"
                   ? (option.amount as number)
-                  : calculatedPricesMap[option.id]
+                  : calculatedPricesMap[option.id]?.amount
+
+                const deliveryTime = option.price_type === "flat"
+                  ? null
+                  : calculatedPricesMap[option.id]?.delivery_time
 
                 return (
                   <div
@@ -166,7 +182,7 @@ const Shipping: React.FC<ShippingProps> = ({
                   >
                     <div className="flex items-center gap-x-4">
                       <div className={clx(
-                        "w-5 h-5 rounded-full border flex items-center justify-center transition-colors",
+                        "w-5 h-5 rounded-full border flex items-center justify-center transition-colors flex-shrink-0",
                         isSelected ? "border-secondary bg-secondary" : "border-border"
                       )}>
                         {isSelected && <div className="w-2 h-2 rounded-full bg-background" />}
@@ -175,6 +191,11 @@ const Shipping: React.FC<ShippingProps> = ({
                         <span className="font-display text-sm tracking-wide text-ui-fg-base uppercase">
                           {option.name}
                         </span>
+                        {deliveryTime && (
+                          <span className="text-xs text-ui-fg-muted font-body italic mt-0.5">
+                            {deliveryTime} dias úteis
+                          </span>
+                        )}
                       </div>
                     </div>
                     <span className="font-medium text-secondary font-body">
@@ -191,15 +212,25 @@ const Shipping: React.FC<ShippingProps> = ({
 
           <div className="pt-4 border-t border-border/30">
             <ErrorMessage error={error} />
-            <Button
-              className="w-full cta-primary h-12 text-base uppercase tracking-widest font-display"
-              onClick={handleSubmit}
-              isLoading={isLoading}
-              disabled={!hasSelectedMethod || isLoadingPrices}
-              variant="secondary"
-            >
-              Continuar
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-1/3 h-12 bg-transparent border border-border/50 text-foreground/80 hover:bg-transparent hover:text-secondary hover:border-secondary/50 font-display uppercase tracking-widest font-semibold"
+                onClick={() => router.push(pathname + "?step=address", { scroll: false })}
+              >
+                Voltar
+              </Button>
+              <Button
+                className="w-2/3 bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] hover:brightness-110 text-black font-display font-bold tracking-[0.2em] uppercase text-[12px] h-12 rounded-md shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 active:scale-[0.98]"
+                onClick={handleSubmit}
+                isLoading={isLoading}
+                disabled={!hasSelectedMethod || isLoadingPrices}
+                variant="secondary"
+              >
+                Continuar
+              </Button>
+            </div>
           </div>
         </div>
       ) : (

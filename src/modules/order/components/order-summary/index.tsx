@@ -49,7 +49,7 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
         </div>
         <div className="h-px w-full border-b border-[#D4AF37]/20 border-dashed my-4" />
         <div className="flex items-center justify-between font-cinzel text-xl md:text-2xl text-emerald-400 font-bold mb-2">
-          <span>Pacto Final (Total)</span>
+          <span>Ritual Final (Total)</span>
           <span>{getAmount(order.total)}</span>
         </div>
       </div>

@@ -1,8 +1,8 @@
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-    title: "O Pacto | Termos de Uso",
-    description: "Os termos e condições, o pacto firmado com a Serpente. Leia antes de atravessar o véu.",
+    title: "O Ritual | Termos de Uso",
+    description: "Os termos e condições, o ritual firmado com a Serpente. Leia antes de atravessar o véu.",
 }
 
 type Props = {
@@ -25,7 +25,7 @@ export default async function TermsPage({ params }: Props) {
             <div className="container mx-auto px-6 relative z-10 max-w-5xl">
                 <div className="flex flex-col items-center justify-center text-center mb-16 space-y-4">
                     <h1 className="font-cinzel text-5xl md:text-7xl font-bold bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#D4AF37] bg-clip-text text-transparent uppercase tracking-widest drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">
-                        O Pacto
+                        O Ritual
                     </h1>
                     <p className="font-inter text-neutral-400 max-w-2xl text-lg leading-relaxed">
                         As leis da Serpente são absolutas. O véu escuro se abre para aqueles que compreendem os termos de nossa comunhão. Leia as inscrições com atenção.
@@ -78,7 +78,7 @@ export default async function TermsPage({ params }: Props) {
                         <div id="privacidade" className="scroll-mt-32">
                             <h2 className="font-cinzel text-3xl font-bold text-[#D4AF37] mb-6">II. O Véu (Privacidade)</h2>
                             <p>
-                                Seus dados são as runas que permitem o envio das relíquias. Coletamos apenas o necessário para que o pacto de entrega seja cumprido, jamais partilhando sua essência com terceiros para fins obscuros.
+                                Seus dados são as runas que permitem o envio das relíquias. Coletamos apenas o necessário para que o ritual de entrega seja cumprido, jamais partilhando sua essência com terceiros para fins obscuros.
                             </p>
                         </div>
 

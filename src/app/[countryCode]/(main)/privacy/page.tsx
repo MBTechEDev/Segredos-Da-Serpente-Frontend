@@ -57,7 +57,7 @@ export default async function PrivacyPage({ params }: Props) {
                                 <a href="#direitos" className="block w-full">V. Os Direitos do Iniciado</a>
                             </li>
                             <li className="cursor-pointer hover:text-[#F1D06E] transition-colors">
-                                <a href="#alteracoes" className="block w-full">VI. Alterações no Pacto</a>
+                                <a href="#alteracoes" className="block w-full">VI. Alterações no Ritual</a>
                             </li>
                         </ul>
                     </aside>
@@ -67,7 +67,7 @@ export default async function PrivacyPage({ params }: Props) {
                         <div id="colheita" className="scroll-mt-32">
                             <h2 className="font-cinzel text-3xl font-bold text-[#D4AF37] mb-6">I. A Colheita de Runas (Quais dados coletamos?)</h2>
                             <p className="mb-4">
-                                Para que o pacto de comunhão seja selado, coletamos as seguintes informações:
+                                Para que o ritual de comunhão seja selado, coletamos as seguintes informações:
                             </p>
                             <p className="mb-4">
                                 <strong>Identidade:</strong> Nome completo e CPF (necessário para a emissão de notas fiscais e rituais de envio).
@@ -102,7 +102,7 @@ export default async function PrivacyPage({ params }: Props) {
                         <div id="compartilhamento" className="scroll-mt-32">
                             <h2 className="font-cinzel text-3xl font-bold text-[#D4AF37] mb-6">III. O Compartilhamento com os Mensageiros</h2>
                             <p className="mb-4">
-                                A Serpente não caminha sozinha. Para que o pacto se complete, compartilhamos fragmentos de seus dados com:
+                                A Serpente não caminha sozinha. Para que o ritual se complete, compartilhamos fragmentos de seus dados com:
                             </p>
                             <p className="mb-4">
                                 <strong>Intermediadores de Pagamento:</strong> Para validar sua oferenda de forma segura.
@@ -139,7 +139,7 @@ export default async function PrivacyPage({ params }: Props) {
                         </div>
 
                         <div id="alteracoes" className="scroll-mt-32">
-                            <h2 className="font-cinzel text-3xl font-bold text-[#D4AF37] mb-6">VI. Alterações no Pacto</h2>
+                            <h2 className="font-cinzel text-3xl font-bold text-[#D4AF37] mb-6">VI. Alterações no Ritual</h2>
                             <p>
                                 O véu pode mudar conforme novas leis surjam ou novos rituais sejam criados. Recomendamos que visite esta página periodicamente para manter-se ciente de como suas informações são protegidas.
                             </p>

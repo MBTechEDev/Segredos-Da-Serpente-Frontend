@@ -16,7 +16,7 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
   return (
     <div className="flex flex-col gap-3 pb-6 border-b border-[#D4AF37]/20">
       <p className="font-body text-sm md:text-base text-neutral-400">
-        Os detalhes deste pacto foram enviados para a essência{" "}
+        Os detalhes deste ritual foram enviados para a essência{" "}
         <span
           className="text-[#F1D06E] font-semibold"
           data-testid="order-email"

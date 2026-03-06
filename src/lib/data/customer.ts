@@ -180,7 +180,7 @@ export const addCustomerAddress = async (
     address_1: formData.get("address_1") as string,
     address_2: formData.get("address_2") as string,
     city: formData.get("city") as string,
-    postal_code: formData.get("postal_code") as string,
+    postal_code: (formData.get("postal_code") as string)?.replace(/\D/g, ""),
     province: formData.get("province") as string,
     country_code: formData.get("country_code") as string,
     phone: formData.get("phone") as string,
@@ -241,7 +241,7 @@ export const updateCustomerAddress = async (
     address_1: formData.get("address_1") as string,
     address_2: formData.get("address_2") as string,
     city: formData.get("city") as string,
-    postal_code: formData.get("postal_code") as string,
+    postal_code: (formData.get("postal_code") as string)?.replace(/\D/g, ""),
     province: formData.get("province") as string,
     country_code: formData.get("country_code") as string,
   } as HttpTypes.StoreUpdateCustomerAddress

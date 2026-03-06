@@ -468,13 +468,27 @@ export default function MPCardContainer({
             <input id="transactionAmount" name="transactionAmount" type="hidden" value={cart?.total ? cart.total.toString() : ""} />
             <input id="description" name="description" type="hidden" value="Compra - Segredos da Serpente" />
 
-            <button
-                type="submit"
-                id="form-checkout__submit"
-                className="w-full h-12 mt-2 bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#D4AF37] text-[#080c0a] font-display font-medium text-sm tracking-widest rounded-md hover:brightness-110 transition-all duration-300 pointer-events-auto"
-            >
-                PAGAR
-            </button>
+            <div className="flex items-center gap-4 mt-2">
+                <button
+                    type="button"
+                    onClick={() => {
+                        const params = new URLSearchParams(window.location.search);
+                        params.set("step", "delivery");
+                        window.history.pushState(null, "", "?" + params.toString());
+                        window.location.reload();
+                    }}
+                    className="w-1/3 h-12 bg-transparent border border-border/50 text-foreground/80 hover:bg-transparent hover:text-secondary hover:border-secondary/50 font-display uppercase tracking-widest font-semibold rounded-md transition-all duration-300"
+                >
+                    Voltar
+                </button>
+                <button
+                    type="submit"
+                    id="form-checkout__submit"
+                    className="w-2/3 bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] hover:brightness-110 text-black font-display font-bold tracking-[0.2em] uppercase text-[12px] h-12 rounded-md shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 active:scale-[0.98] pointer-events-auto"
+                >
+                    Continuar
+                </button>
+            </div>
         </form>
     )
 }

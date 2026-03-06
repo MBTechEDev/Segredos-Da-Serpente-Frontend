@@ -134,9 +134,6 @@ export default function ProductTemplate({
                                     </span>
                                 )}
                             </div>
-                            <p className="text-sm text-muted-foreground font-body">
-                                ou em até 10x no portal de pagamentos
-                            </p>
                         </div>
 
                         {/* Opções (Variantes) */}

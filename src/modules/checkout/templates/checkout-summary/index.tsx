@@ -59,7 +59,7 @@ export default function CheckoutSummary({ cart }: { cart: HttpTypes.StoreCart })
           <span className={cart.shipping_total === 0 ? "text-primary italic" : "text-ui-fg-base"}>
             {cart.shipping_total && cart.shipping_total > 0
               ? formatPrice(cart.shipping_total)
-              : "Grátis"}
+              : "A calcular"}
           </span>
         </div>
 
