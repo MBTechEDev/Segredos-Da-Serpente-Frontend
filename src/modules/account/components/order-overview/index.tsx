@@ -124,7 +124,7 @@ const OrderOverview = ({ orders }: OrderOverviewProps) => {
                   <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-2">
                     <p className="text-xl font-display text-secondary">
                       {convertToLocale({
-                        amount: order.total,
+                        amount: order.summary.current_order_total,
                         currency_code: order.currency_code,
                       })}
                     </p>

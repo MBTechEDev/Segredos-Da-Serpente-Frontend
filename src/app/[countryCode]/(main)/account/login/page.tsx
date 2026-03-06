@@ -11,6 +11,20 @@ export const metadata: Metadata = {
   },
 }
 
-export default function LoginPage() {
+import { retrieveCustomer } from "@lib/data/customer"
+import { redirect } from "next/navigation"
+
+export default async function LoginPage({
+  params,
+}: {
+  params: Promise<{ countryCode: string }>
+}) {
+  const customer = await retrieveCustomer().catch(() => null)
+  const { countryCode } = await params
+
+  if (customer) {
+    redirect(`/${countryCode}/account`)
+  }
+
   return <LoginTemplate />
 }

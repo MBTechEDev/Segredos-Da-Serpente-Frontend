@@ -132,7 +132,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                         <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
                           <span className="font-inter text-emerald-400 font-medium whitespace-nowrap bg-emerald-950/30 px-3 py-1 rounded-md border border-emerald-900/40">
                             {convertToLocale({
-                              amount: order.total,
+                              amount: order.summary.current_order_total,
                               currency_code: order.currency_code,
                             })}
                           </span>

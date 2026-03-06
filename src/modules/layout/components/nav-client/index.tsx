@@ -7,7 +7,7 @@ import { Menu, ShoppingBag, Search, User, ChevronDown } from "lucide-react"
 
 import { Button } from "@components/ui/button"
 import { Input } from "@components/ui/input"
-import { Sheet, SheetContent, SheetTrigger } from "@components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@components/ui/sheet"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import MobileMenu from "@modules/layout/components/mobile-menu"
 import CartDrawer from "@modules/layout/components/cart-drawer"
@@ -21,6 +21,7 @@ type NavClientProps = {
 const NavClient = ({ regions, categories }: NavClientProps) => {
     const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [isScrolled, setIsScrolled] = useState(false)
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const pathname = usePathname()
     const router = useRouter()
@@ -73,7 +74,7 @@ const NavClient = ({ regions, categories }: NavClientProps) => {
                 <div className="flex items-center justify-between h-16 md:h-20">
 
                     {/* 1. Mobile Menu (Sheet) */}
-                    <Sheet>
+                    <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                         <SheetTrigger asChild className="md:hidden">
                             <Button
                                 variant="ghost"
@@ -84,7 +85,9 @@ const NavClient = ({ regions, categories }: NavClientProps) => {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="w-[85vw] sm:w-80 bg-background border-r border-border p-0">
-                            <MobileMenu categories={categories} />
+                            <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
+                            <SheetDescription className="sr-only">Navegue pelas categorias e páginas da loja.</SheetDescription>
+                            <MobileMenu categories={categories} closeMenu={() => setIsMobileMenuOpen(false)} />
                         </SheetContent>
                     </Sheet>
 
