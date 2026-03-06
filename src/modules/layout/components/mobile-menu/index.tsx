@@ -12,6 +12,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 type MobileMenuProps = {
     categories: HttpTypes.StoreProductCategory[]
     isOpen?: boolean // Caso queiras controlar o estado externamente depois
+    closeMenu?: () => void
 }
 
 // Utilitário para mapear ícones baseados no handle da categoria (opcional, para manter o visual)
@@ -23,7 +24,7 @@ const getCategoryIcon = (handle: string) => {
     return Sparkles // Ícone padrão
 }
 
-const MobileMenu = ({ categories }: MobileMenuProps) => {
+const MobileMenu = ({ categories, closeMenu }: MobileMenuProps) => {
     // Filtros estáticos (Filtros dinâmicos complexos geralmente ficam na página de busca, não no menu)
     const priceRanges = [
         "Até R$ 50",
@@ -36,7 +37,7 @@ const MobileMenu = ({ categories }: MobileMenuProps) => {
         <div className="h-full flex flex-col bg-background">
             {/* Header */}
             <div className="p-6 border-b border-border">
-                <LocalizedClientLink href="/" className="flex items-baseline">
+                <LocalizedClientLink href="/" className="flex items-baseline" onClick={closeMenu}>
                     <span className="font-display text-xl text-gradient-gold tracking-wider bg-gradient-to-r from-[#D4AF37] via-[#F1D06E] to-[#996515] bg-clip-text text-transparent drop-shadow-sm">
                         Segredos
                     </span>
@@ -82,6 +83,7 @@ const MobileMenu = ({ categories }: MobileMenuProps) => {
                                                                         key={child.id}
                                                                         href={`/categories/${child.handle}`}
                                                                         className="block text-sm text-muted-foreground hover:text-gold transition-colors py-1 pl-2"
+                                                                        onClick={closeMenu}
                                                                     >
                                                                         {child.name}
                                                                     </LocalizedClientLink>
@@ -99,6 +101,7 @@ const MobileMenu = ({ categories }: MobileMenuProps) => {
                                                 key={category.id}
                                                 href={`/categories/${category.handle}`}
                                                 className="flex items-center gap-3 py-2 text-sm text-foreground/80 hover:text-gold transition-colors"
+                                                onClick={closeMenu}
                                             >
                                                 <Icon className="h-4 w-4 text-secondary" />
                                                 <span>{category.name}</span>
@@ -159,14 +162,14 @@ const MobileMenu = ({ categories }: MobileMenuProps) => {
 
             {/* Footer Actions */}
             <div className="p-4 border-t border-border space-y-3 bg-card/30">
-                <LocalizedClientLink href="/account" className="w-full block">
+                <LocalizedClientLink href="/account" className="w-full block" onClick={closeMenu}>
                     <Button className="w-full cta-primary py-6">
                         <User className="h-4 w-4 mr-2" />
                         Minha Conta
                     </Button>
                 </LocalizedClientLink>
 
-                <LocalizedClientLink href="/account/login" className="w-full block">
+                <LocalizedClientLink href="/account/login" className="w-full block" onClick={closeMenu}>
                     <Button variant="outline" className="w-full border-secondary/50 text-secondary hover:bg-secondary hover:text-secondary-foreground py-6 border-mystical">
                         <LogIn className="h-4 w-4 mr-2" />
                         Entrar / Cadastrar

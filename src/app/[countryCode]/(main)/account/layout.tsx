@@ -1,34 +1,14 @@
-import { retrieveCustomer } from "@lib/data/customer"
 import { Toaster } from "@medusajs/ui"
-import AccountLayout from "@modules/account/templates/account-layout"
 
-export default async function AccountPageLayout({
-  dashboard,
-  login,
+export default function AccountPageLayout({
+  children,
 }: {
-  dashboard: React.ReactNode
-  login: React.ReactNode
+  children: React.ReactNode
 }) {
-  // Busca o cliente no servidor
-  const customer = await retrieveCustomer().catch(() => null)
-
-  // Caso 1: Usuário NÃO está logado - Renderiza o slot @login
-  if (!customer) {
-    return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-64px)] bg-background">
-        <div className="w-full max-w-md p-4">
-          {login}
-          <Toaster />
-        </div>
-      </div>
-    )
-  }
-
-  // Caso 2: Usuário ESTÁ logado - Renderiza o slot @dashboard dentro do template
   return (
-    <AccountLayout customer={customer}>
-      {dashboard}
+    <>
+      {children}
       <Toaster />
-    </AccountLayout>
+    </>
   )
 }
