@@ -104,6 +104,8 @@ async function getCountryCode(
  * Middleware to handle region selection and onboarding status.
  */
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
   let redirectUrl = request.nextUrl.href
 
   let response = NextResponse.redirect(redirectUrl, 307)
@@ -118,6 +120,10 @@ export async function middleware(request: NextRequest) {
 
   const urlHasCountryCode =
     countryCode && request.nextUrl.pathname.split("/")[1].includes(countryCode)
+
+  if (pathname.startsWith("/admin")) {
+    return NextResponse.next()
+  }
 
   // if one of the country codes is in the url and the cache id is set, return next
   if (urlHasCountryCode && cacheIdCookie) {
