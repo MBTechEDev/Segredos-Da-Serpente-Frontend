@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react"
 import { HttpTypes } from "@medusajs/types"
-import { useParams } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 import { toast } from "sonner"
 
 import {
@@ -51,6 +51,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false)
 
     const params = useParams()
+    const pathname = usePathname()
     const countryCode = (params?.countryCode as string) || "br"
 
 
@@ -72,6 +73,13 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         }
         init()
     }, [fetchCart])
+
+    // Regra Ouro: Limpa o carrinho ao finalizar o pedido
+    useEffect(() => {
+        if (pathname && pathname.includes('/order/') && pathname.endsWith('/confirmed')) {
+            setCart(null)
+        }
+    }, [pathname])
 
     const refreshCart = async () => {
         setIsLoading(true)
@@ -128,7 +136,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
             await fetchCart()
             toast.success("Item removido do ritual")
         } catch (error: any) {
-            toast.error("Erro ao remover item")
+            console.error("CartContext removeItem Error:", error);
+            toast.error(error.message || "Erro ao remover item")
         } finally {
             setIsLoading(false)
         }

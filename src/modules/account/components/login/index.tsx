@@ -15,7 +15,6 @@ import { login } from "@lib/data/customer"
 import { Input } from "@components/ui/input"
 import { Label } from "@components/ui/label"
 import { Button } from "@components/ui/button"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
  * Componente de Login - Segredos da Serpente

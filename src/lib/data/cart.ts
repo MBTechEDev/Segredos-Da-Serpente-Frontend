@@ -201,16 +201,22 @@ export async function deleteLineItem(lineId: string) {
     ...(await getAuthHeaders()),
   }
 
-  await sdk.store.cart
-    .deleteLineItem(cartId, lineId, {}, headers)
-    .then(async () => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
+  try {
+    await sdk.store.cart.deleteLineItem(cartId, lineId, {}, headers)
+  } catch (error: any) {
+    // Medusa JS SDK sometimes fails to parse empty responses correctly resulting in a generic JSON error
+    if (error && error.message && error.message.toLowerCase().includes("json")) {
+      console.log("Ignored JSON parse error on deleteLineItem - Item is likely deleted.")
+    } else {
+      medusaError(error)
+    }
+  }
 
-      const fulfillmentCacheTag = await getCacheTag("fulfillment")
-      revalidateTag(fulfillmentCacheTag)
-    })
-    .catch(medusaError)
+  const cartCacheTag = await getCacheTag("carts")
+  revalidateTag(cartCacheTag)
+
+  const fulfillmentCacheTag = await getCacheTag("fulfillment")
+  revalidateTag(fulfillmentCacheTag)
 }
 
 export async function setShippingMethod({
