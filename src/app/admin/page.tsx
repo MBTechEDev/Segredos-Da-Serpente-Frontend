@@ -6,6 +6,8 @@ import Button from "@modules/admin/account/component/logout"
 import { cn } from "@lib/utils"
 import { Activity, Package, Users, TrendingUp } from "lucide-react"
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
     title: "Santuário | Visão Geral",
     description: "Análise e segredos do dia a dia",
