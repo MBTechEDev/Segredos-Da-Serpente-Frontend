@@ -68,8 +68,10 @@ export const listProducts = async ({
           ...queryParams,
         },
         headers,
-        next,
-        cache: "force-cache",
+        next: {
+          ...next,
+          revalidate: 60,
+        },
       }
     )
     .then(({ products, count }) => {
@@ -155,8 +157,10 @@ export const getProductByHandle = async (handle: string) => {
           fields: "*variants.calculated_price,+variants.inventory_quantity,+metadata,+tags,*images",
         },
         headers,
-        next,
-        cache: "force-cache",
+        next: {
+          ...next,
+          revalidate: 60,
+        },
       }
     )
     .then(({ products }) => products[0]) // O Medusa retorna um array, pegamos o primeiro resultado
