@@ -14,6 +14,7 @@ import { Button } from "@components/ui/button"
 import { Badge } from "@components/ui/badge"
 import { useCartContext } from "@lib/context/CartContext"
 import { cn } from "@lib/utils"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 interface ProductQuickViewProps {
     product: HttpTypes.StoreProduct
@@ -27,6 +28,7 @@ const ProductQuickView = ({ product, region, isOpen, setIsOpen }: ProductQuickVi
     const [isAdding, setIsAdding] = useState(false)
     const [quantity, setQuantity] = useState(1)
     const [activeImage, setActiveImage] = useState(product.images?.[0]?.url || product.thumbnail || "/placeholder.svg")
+    const [overrideImageUrl, setOverrideImageUrl] = useState<string | null>(null)
 
     // Pegamos a primeira variante para o Quick View, ou lidamos com opções.
     // Para simplificar no Quick View, o clique na cor/tamanho poderia atualizar esse selectedVariant
@@ -74,12 +76,12 @@ const ProductQuickView = ({ product, region, isOpen, setIsOpen }: ProductQuickVi
                 <div className="grid grid-cols-1 md:grid-cols-2 h-full max-h-[90vh]">
 
                     {/* Coluna da Imagem - Estilo Foco */}
-                    <div className="relative w-full h-full bg-[#050505] p-6 lg:p-10 flex flex-col justify-center items-center overflow-hidden">
-                        <div className="relative w-full max-w-sm aspect-[4/5] rounded-xl overflow-hidden border border-white/5 shadow-2xl">
+                    <div className="relative w-full h-full bg-[#050505] p-6 lg:p-10 flex flex-col justify-center items-center overflow-hidden min-w-0">
+                        <div className="relative w-full max-w-sm aspect-[4/5] flex items-center justify-center rounded-xl overflow-hidden border border-white/5 shadow-2xl">
                             <img
-                                src={activeImage}
+                                src={overrideImageUrl || activeImage}
                                 alt={product.title}
-                                className="object-cover w-full h-full transition-opacity duration-300"
+                                className="object-contain w-full h-full transition-opacity duration-300"
                             />
                             <div className="absolute top-4 left-4 flex gap-2 z-10">
                                 {isNew && (
@@ -105,7 +107,10 @@ const ProductQuickView = ({ product, region, isOpen, setIsOpen }: ProductQuickVi
                                             "w-16 h-16 rounded-md overflow-hidden border transition-colors flex-shrink-0",
                                             activeImage === img.url ? "border-secondary" : "border-white/10 hover:border-secondary/50"
                                         )}
-                                        onClick={() => setActiveImage(img.url)}
+                                        onClick={() => {
+                                            setActiveImage(img.url)
+                                            setOverrideImageUrl(null)
+                                        }}
                                     >
                                         <img src={img.url} alt="Thumbnail" className="w-full h-full object-cover" />
                                     </button>
@@ -162,7 +167,35 @@ const ProductQuickView = ({ product, region, isOpen, setIsOpen }: ProductQuickVi
                                             {option.values?.map((val) => (
                                                 <button
                                                     key={val.id}
-                                                    className="px-4 py-2 text-[10px] uppercase font-display border border-white/10 rounded-full text-foreground/80 hover:border-secondary/50 hover:text-secondary transition-colors"
+                                                    className={cn(
+                                                        "px-4 py-2 text-[10px] uppercase font-display border rounded-full transition-colors",
+                                                        selectedVariant?.options?.some(o => o.value === val.value)
+                                                            ? "border-secondary bg-secondary/10 text-secondary"
+                                                            : "border-white/10 text-foreground/80 hover:border-secondary/50 hover:text-secondary"
+                                                    )}
+                                                    onClick={() => {
+                                                        const variant = product.variants?.find(v => v.options?.some(o => o.value === val.value))
+                                                        if (variant) {
+                                                            setSelectedVariant(variant)
+                                                            if (typeof variant.inventory_quantity === 'number' && quantity > variant.inventory_quantity) {
+                                                                setQuantity(Math.max(1, variant.inventory_quantity))
+                                                            }
+                                                            
+                                                            const varImgUrl = variant.images?.[0]?.url || (variant as any).thumbnail;
+                                                            if (varImgUrl) {
+                                                                const isThumbnail = product.images?.some(img => img.url === varImgUrl);
+                                                                if (isThumbnail) {
+                                                                    setActiveImage(varImgUrl);
+                                                                    setOverrideImageUrl(null);
+                                                                } else {
+                                                                    setOverrideImageUrl(varImgUrl);
+                                                                }
+                                                            } else {
+                                                                setActiveImage(product.images?.[0]?.url || product.thumbnail || "/placeholder.svg");
+                                                                setOverrideImageUrl(null);
+                                                            }
+                                                        }
+                                                    }}
                                                 >
                                                     {val.value}
                                                 </button>
@@ -173,33 +206,20 @@ const ProductQuickView = ({ product, region, isOpen, setIsOpen }: ProductQuickVi
                             </div>
                         )}
 
-                        {/* Add to Cart Actions */}
-                        <div className="mt-auto grid grid-cols-[auto_1fr] gap-4 mb-8">
-                            {/* Quantity Selector */}
-                            <div className="flex items-center bg-black/40 border border-white/10 rounded-md h-[52px]">
-                                <button
-                                    className="w-10 h-full flex items-center justify-center text-muted-foreground hover:text-white transition-colors"
-                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                >
-                                    <Minus className="w-3 h-3" />
-                                </button>
-                                <span className="w-8 text-center font-body text-sm">{quantity}</span>
-                                <button
-                                    className="w-10 h-full flex items-center justify-center text-muted-foreground hover:text-white transition-colors"
-                                    onClick={() => setQuantity(quantity + 1)}
-                                >
-                                    <Plus className="w-3 h-3" />
-                                </button>
-                            </div>
-
-                            <Button
-                                className="h-[52px] bg-[#1a4a38] hover:bg-[#133628] text-white border border-[#23634b] font-display font-medium tracking-[0.1em] uppercase text-xs shadow-[0_0_20px_rgba(26,74,56,0.5)] hover:shadow-[0_0_30px_rgba(26,74,56,0.7)] transition-all duration-300 active:scale-[0.98]"
-                                onClick={handleAddToCart}
-                                disabled={isAdding || !selectedVariant}
+                        {/* Ações de Redirecionamento (Quick View Mode) */}
+                        <div className="mt-auto pt-6 mb-8">
+                            <LocalizedClientLink
+                                href={`/products/${product.handle}`}
+                                className="block w-full"
+                                onClick={() => setIsOpen(false)}
                             >
-                                {isAdding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ShoppingBag className="h-4 w-4 mr-2" />}
-                                {isAdding ? "Reivindicando..." : "Reivindicar Agora"}
-                            </Button>
+                                <Button
+                                    className="w-full h-[52px] bg-[#1a4a38] hover:bg-[#133628] text-white border border-[#23634b] font-display font-medium tracking-[0.1em] uppercase text-xs shadow-[0_0_20px_rgba(26,74,56,0.5)] hover:shadow-[0_0_30px_rgba(26,74,56,0.7)] transition-all duration-300 active:scale-[0.98]"
+                                >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Ver Detalhes do Artefato
+                                </Button>
+                            </LocalizedClientLink>
                         </div>
 
                         {/* Footer Badges */}
