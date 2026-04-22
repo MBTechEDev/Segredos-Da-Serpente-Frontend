@@ -61,15 +61,15 @@ export default function ProductTemplate({
                 <div className="grid lg:grid-cols-2 gap-12">
 
                     {/* Coluna Esquerda: Galeria Glassmorphism */}
-                    <div className="space-y-4">
-                        <div className="relative aspect-square overflow-hidden rounded-2xl glass-dark border border-white/10">
+                    <div className="space-y-4 min-w-0 w-full max-w-full">
+                        <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden rounded-2xl glass-dark border border-white/10">
                             <img
                                 src={product.images?.[selectedImage]?.url || product.thumbnail || "/placeholder.svg"}
                                 alt={product.title ?? "Produto místico"}
-                                className="w-full h-full object-cover transition-all duration-700 hover:scale-110"
+                                className="w-full h-full object-contain transition-all duration-700 hover:scale-110"
                             />
 
-                            <div className="absolute top-4 left-4 flex flex-col gap-2">
+                            <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
                                 {hasDiscount && (
                                     <Badge className="bg-accent text-accent-foreground font-display animate-pulse">
                                         OFERTA MÍSTICA
@@ -83,13 +83,13 @@ export default function ProductTemplate({
                             </div>
                         </div>
 
-                        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide w-full max-w-full snap-x">
                             {product.images?.map((img, i) => (
                                 <button
                                     key={img.id}
                                     onClick={() => setSelectedImage(i)}
                                     className={cn(
-                                        "w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all",
+                                        "w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all snap-start",
                                         selectedImage === i ? "border-secondary" : "border-transparent opacity-50 hover:opacity-100"
                                     )}
                                 >
