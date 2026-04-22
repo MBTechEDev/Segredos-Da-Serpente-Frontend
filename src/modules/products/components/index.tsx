@@ -22,6 +22,7 @@ export default function ProductTemplate({
 }) {
     const { addItem } = useCartContext()
     const [selectedImage, setSelectedImage] = useState(0)
+    const [overrideImageUrl, setOverrideImageUrl] = useState<string | null>(null)
     const [quantity, setQuantity] = useState(1)
     const [selectedVariantId, setSelectedVariantId] = useState(product.variants?.[0]?.id)
     const [viewingNow, setViewingNow] = useState(12)
@@ -64,7 +65,7 @@ export default function ProductTemplate({
                     <div className="space-y-4 min-w-0 w-full max-w-full">
                         <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden rounded-2xl glass-dark border border-white/10">
                             <img
-                                src={product.images?.[selectedImage]?.url || product.thumbnail || "/placeholder.svg"}
+                                src={overrideImageUrl || product.images?.[selectedImage]?.url || product.thumbnail || "/placeholder.svg"}
                                 alt={product.title ?? "Produto místico"}
                                 className="w-full h-full object-contain transition-all duration-700 hover:scale-110"
                             />
@@ -87,7 +88,10 @@ export default function ProductTemplate({
                             {product.images?.map((img, i) => (
                                 <button
                                     key={img.id}
-                                    onClick={() => setSelectedImage(i)}
+                                    onClick={() => {
+                                        setSelectedImage(i)
+                                        setOverrideImageUrl(null)
+                                    }}
                                     className={cn(
                                         "w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all snap-start",
                                         selectedImage === i ? "border-secondary" : "border-transparent opacity-50 hover:opacity-100"
@@ -154,7 +158,26 @@ export default function ProductTemplate({
                                             )}
                                             onClick={() => {
                                                 const variant = product.variants?.find(v => v.options?.some(o => o.value === val.value))
-                                                if (variant) setSelectedVariantId(variant.id)
+                                                if (variant) {
+                                                    setSelectedVariantId(variant.id)
+                                                    if (typeof variant.inventory_quantity === 'number' && quantity > variant.inventory_quantity) {
+                                                        setQuantity(Math.max(1, variant.inventory_quantity))
+                                                    }
+                                                    
+                                                    const varImgUrl = variant.images?.[0]?.url || (variant as any).thumbnail;
+                                                    if (varImgUrl) {
+                                                        const index = product.images?.findIndex(img => img.url === varImgUrl);
+                                                        if (index !== undefined && index !== -1) {
+                                                            setSelectedImage(index);
+                                                            setOverrideImageUrl(null);
+                                                        } else {
+                                                            setOverrideImageUrl(varImgUrl);
+                                                        }
+                                                    } else {
+                                                        setSelectedImage(0);
+                                                        setOverrideImageUrl(null);
+                                                    }
+                                                }
                                             }}
                                         >
                                             {val.value}
@@ -164,20 +187,45 @@ export default function ProductTemplate({
                             </div>
                         ))}
 
+                        {/* Estoque Disponível */}
+                        <div className="pt-2 flex items-center text-sm font-display tracking-widest uppercase">
+                            {typeof selectedVariant?.inventory_quantity === 'number' ? (
+                                selectedVariant.inventory_quantity > 0 ? (
+                                    <div className="flex items-center text-emerald">
+                                        <span className="relative flex h-2 w-2 mr-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald"></span>
+                                        </span>
+                                        {selectedVariant.inventory_quantity} {selectedVariant.inventory_quantity === 1 ? 'Artefato em estoque' : 'Artefatos em estoque'}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center text-destructive">
+                                        <div className="h-2 w-2 rounded-full bg-destructive mr-2" />
+                                        Artefato Esgotado
+                                    </div>
+                                )
+                            ) : null}
+                        </div>
+
                         {/* Ações de Compra Corrigidas */}
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-6">
                             {/* Seletor de Quantidade */}
                             <div className="flex items-center justify-between sm:justify-start border border-white/10 rounded-lg glass-dark h-12 lg:h-14">
                                 <button
                                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                    className="px-4 h-full hover:text-secondary transition-colors"
+                                    className="px-4 h-full hover:text-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={quantity <= 1 || (typeof selectedVariant?.inventory_quantity === 'number' && selectedVariant.inventory_quantity === 0)}
                                 >
                                     <Minus size={16} />
                                 </button>
                                 <span className="w-10 text-center font-display text-lg">{quantity}</span>
                                 <button
-                                    onClick={() => setQuantity(quantity + 1)}
-                                    className="px-4 h-full hover:text-secondary transition-colors"
+                                    onClick={() => {
+                                        const maxQty = selectedVariant?.inventory_quantity ?? 99;
+                                        if (quantity < maxQty) setQuantity(quantity + 1);
+                                    }}
+                                    className="px-4 h-full hover:text-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={typeof selectedVariant?.inventory_quantity === 'number' && quantity >= selectedVariant.inventory_quantity}
                                 >
                                     <Plus size={16} />
                                 </button>
@@ -186,9 +234,11 @@ export default function ProductTemplate({
                             {/* Botão de Checkout */}
                             <Button
                                 onClick={handleAddToCart}
-                                className="flex-1 h-12 lg:h-14 cta-primary text-base lg:text-lg font-display tracking-widest"
+                                disabled={typeof selectedVariant?.inventory_quantity === 'number' && selectedVariant.inventory_quantity === 0}
+                                className="flex-1 h-12 lg:h-14 cta-primary text-base lg:text-lg font-display tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <ShoppingBag className="mr-2 w-5 h-5" /> REIVINDICAR AGORA
+                                <ShoppingBag className="mr-2 w-5 h-5" /> 
+                                {typeof selectedVariant?.inventory_quantity === 'number' && selectedVariant.inventory_quantity === 0 ? "ESGOTADO" : "REIVINDICAR AGORA"}
                             </Button>
                         </div>
 
